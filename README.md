@@ -1,86 +1,237 @@
-==== BEGIN FILE: Axiom/app/build.gradle ====
+// File: Axiom/build.gradle
+
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    id 'com.android.application' version '8.9.1' apply false
+    id 'com.android.library' version '8.9.1' apply false
+         
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+// File: Axiom/gradle.properties
+
+# Project-wide Gradle settings.
+# IDE (e.g. Android Studio) users:
+# Gradle settings configured through the IDE *will override*
+# any settings specified in this file.
+# For more details on how to configure your build environment visit
+# http://www.gradle.org/docs/current/userguide/build_environment.html
+# Specifies the JVM arguments used for the daemon process.
+# The setting is particularly useful for tweaking memory settings.
+org.gradle.jvmargs=-Xmx512m -Dfile.encoding=UTF-8
+# When configured, Gradle will run in incubating parallel mode.
+# This option should only be used with decoupled projects. More details, visit
+# http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects
+# org.gradle.parallel=true
+# AndroidX package structure to make it clearer which packages are bundled with the
+# Android operating system, and which are packaged with your app"s APK
+# https://developer.android.com/topic/libraries/support-library/androidx-rn
+android.useAndroidX=true
+# Kotlin code style for this project: "official" or "obsolete":
+kotlin.code.style=official
+# Enables namespacing of each library's R class so that its R class includes only the
+# resources declared in the library itself and none from the library's dependencies,
+# thereby reducing the size of the R class for that library
+android.nonTransitiveRClass=true
+
+// File: Axiom/gradlew.bat
+
+@rem
+@rem Copyright 2015 the original author or authors.
+@rem
+@rem Licensed under the Apache License, Version 2.0 (the "License");
+@rem you may not use this file except in compliance with the License.
+@rem You may obtain a copy of the License at
+@rem
+@rem      https://www.apache.org/licenses/LICENSE-2.0
+@rem
+@rem Unless required by applicable law or agreed to in writing, software
+@rem distributed under the License is distributed on an "AS IS" BASIS,
+@rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+@rem See the License for the specific language governing permissions and
+@rem limitations under the License.
+@rem
+@rem SPDX-License-Identifier: Apache-2.0
+@rem
+
+@if "%DEBUG%"=="" @echo off
+@rem ##########################################################################
+@rem
+@rem  Gradle startup script for Windows
+@rem
+@rem ##########################################################################
+
+@rem Set local scope for the variables with windows NT shell
+if "%OS%"=="Windows_NT" setlocal
+
+set DIRNAME=%~dp0
+if "%DIRNAME%"=="" set DIRNAME=.
+@rem This is normally unused
+set APP_BASE_NAME=%~n0
+set APP_HOME=%DIRNAME%
+
+@rem Resolve any "." and ".." in APP_HOME to make it shorter.
+for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
+
+@rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
+
+@rem Find java.exe
+if defined JAVA_HOME goto findJavaFromJavaHome
+
+set JAVA_EXE=java.exe
+%JAVA_EXE% -version >NUL 2>&1
+if %ERRORLEVEL% equ 0 goto execute
+
+echo. 1>&2
+echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH. 1>&2
+echo. 1>&2
+echo Please set the JAVA_HOME variable in your environment to match the 1>&2
+echo location of your Java installation. 1>&2
+
+goto fail
+
+:findJavaFromJavaHome
+set JAVA_HOME=%JAVA_HOME:"=%
+set JAVA_EXE=%JAVA_HOME%/bin/java.exe
+
+if exist "%JAVA_EXE%" goto execute
+
+echo. 1>&2
+echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME% 1>&2
+echo. 1>&2
+echo Please set the JAVA_HOME variable in your environment to match the 1>&2
+echo location of your Java installation. 1>&2
+
+goto fail
+
+:execute
+@rem Setup the command line
+
+set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
+
+
+@rem Execute Gradle
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
+
+:end
+@rem End local scope for the variables with windows NT shell
+if %ERRORLEVEL% equ 0 goto mainEnd
+
+:fail
+rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
+rem the _cmd.exe /c_ return code!
+set EXIT_CODE=%ERRORLEVEL%
+if %EXIT_CODE% equ 0 set EXIT_CODE=1
+if not ""=="%GRADLE_EXIT_CONSOLE%" exit %EXIT_CODE%
+exit /b %EXIT_CODE%
+
+:mainEnd
+if "%OS%"=="Windows_NT" endlocal
+
+:omega
+
+
+// File: Axiom/settings.gradle
+
+pluginManagement {
+  repositories {
+    gradlePluginPortal()
+    google()
+    mavenCentral()
+  }
+}
+
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+  repositories {
+    google()
+    mavenCentral()
+  }
+}
+
+rootProject.name = "Axiom"
+
+include(":app")
+
+// File: Axiom/app/build.gradle
+
 plugins {
     id 'com.android.application'
 }
 
 android {
     namespace 'com.axiomloader'
-    compileSdk 34
-
+    compileSdk 35
+    ndkVersion '28.2.13676358'
+    
     defaultConfig {
         applicationId "com.axiomloader"
-        minSdk 26
-        targetSdk 34
+        minSdk 21
+        targetSdk 35
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
-        // Enable multiDex for Log4j2
-        multiDexEnabled true
+        vectorDrawables { 
+            useSupportLibrary true
+        }
+        
+        externalNativeBuild {
+            ndkBuild {
+                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64', 'x86'
+            }
+        }
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     
-    packagingOptions {
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/ASL2.0'
-        exclude 'META-INF/log4j-provider.properties'
-        pickFirst 'META-INF/log4j2.xml'
-        pickFirst 'META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat'
+    externalNativeBuild {
+        ndkBuild {
+            path file('src/main/jni/Android.mk')
+        }
+    }
+    
+    buildFeatures {
+        viewBinding true
+        // Add this line to explicitly enable BuildConfig generation
+        buildConfig true
     }
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.10.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.recyclerview:recyclerview:1.3.2'
-    implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.cardview:cardview:1.0.0")
+    implementation("androidx.fragment:fragment:1.8.5")
     
-    // MultiDex support
-    implementation 'androidx.multidex:multidex:2.0.1'
+    // Timber for logging
+    implementation 'com.jakewharton.timber:timber:5.0.1'
     
-    // Log4j2 Core Dependencies
-    implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
-    implementation 'org.apache.logging.log4j:log4j-api:2.20.0'
-    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.20.0'
+    // File operations and JSON
+    implementation 'com.google.code.gson:gson:2.10.1'
     
-    // Additional Log4j2 Components
-    implementation 'org.apache.logging.log4j:log4j-layout-template-json:2.20.0'
-    implementation 'org.apache.logging.log4j:log4j-jcl:2.20.0'
-    
-    // JSON Processing for advanced logging
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.15.2'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
-    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
-    
-    // Apache Commons for utilities
+    // Date/Time utilities
     implementation 'org.apache.commons:commons-lang3:3.12.0'
-    implementation 'commons-io:commons-io:2.11.0'
-    
-    // Testing
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
-==== END FILE: Axiom/app/build.gradle ====
 
-==== BEGIN FILE: Axiom/app/proguard-rules.pro ====
+
+// File: Axiom/app/proguard-rules.pro
+
 # Add project specific ProGuard rules here.
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.
@@ -102,40 +253,35 @@ dependencies {
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
-==== END FILE: Axiom/app/proguard-rules.pro ====
 
-==== BEGIN FILE: Axiom/app/src/main/AndroidManifest.xml ====
+// File: Axiom/app/src/main/AndroidManifest.xml
+
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <!-- Permissions for advanced logging features -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        tools:ignore="ScopedStorage" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     
-    <application
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        android:minSdkVersion="30" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <application 
         android:name=".AxiomApplication"
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:requestLegacyExternalStorage="true"
-        android:theme="@style/Theme.AxiomLoader"
-        tools:targetApi="31">
+        android:allowBackup="true" 
+        android:icon="@mipmap/ic_launcher" 
+        android:roundIcon="@mipmap/ic_launcher" 
+        android:label="@string/app_name" 
+        android:supportsRtl="true" 
+        android:theme="@style/AppTheme"
+        android:requestLegacyExternalStorage="true">
         
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AxiomLoader">
+        <activity 
+            android:name=".MainActivity" 
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -145,240 +291,564 @@ dependencies {
         <activity
             android:name=".ui.LoggingActivity"
             android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AxiomLoader"
-            android:parentActivityName=".MainActivity" />
+            android:label="@string/logging_activity_title"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait" />
             
-        <!-- File Provider for log file sharing -->
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.fileprovider"
+            android:authorities="com.axiomloader.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_provider_paths" />
+                android:resource="@xml/file_paths" />
         </provider>
-        
-        <!-- Boot receiver for log system initialization -->
-        <receiver
-            android:name=".utils.LogBootReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter android:priority="1000">
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                <action android:name="android.intent.action.PACKAGE_REPLACED" />
-                <data android:scheme="package" />
-            </intent-filter>
-        </receiver>
-        
-        <!-- Log cleanup service -->
-        <service
-            android:name=".utils.LogCleanupService"
-            android:enabled="true"
-            android:exported="false" />
-
     </application>
-
 </manifest>
-==== END FILE: Axiom/app/src/main/AndroidManifest.xml ====
 
-==== BEGIN FILE: Axiom/app/src/main/java/com/axiomloader/AxiomApplication.java ====
+// File: Axiom/app/src/main/java/com/axiomloader/AxiomApplication.java
+
 package com.axiomloader;
 
 import android.app.Application;
-import android.content.Context;
-import androidx.multidex.MultiDex;
 import com.axiomloader.utils.LogUtils;
+import timber.log.Timber;
 
 public class AxiomApplication extends Application {
-    
-    private LogUtils logUtils;
-    
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(base);
-        MultiDex.install(this);
-    }
-    
     @Override
     public void onCreate() {
         super.onCreate();
-        
-        // Initialize LogUtils early
-        logUtils = LogUtils.getInstance(this);
-        logUtils.info("AxiomApplication", "Application created successfully");
-        
-        // Set up uncaught exception handler
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread thread, Throwable throwable) {
-                logUtils.fatal("UncaughtException", 
-                        "Uncaught exception in thread " + thread.getName(), throwable);
-                
-                // Call default handler
-                Thread.getDefaultUncaughtExceptionHandler().uncaughtException(thread, throwable);
-            }
-        });
-    }
-    
-    @Override
-    public void onTerminate() {
-        super.onTerminate();
-        
-        if (logUtils != null) {
-            logUtils.info("AxiomApplication", "Application terminating");
-            logUtils.shutdown();
+
+        // Initialize LogUtils with the application context
+        LogUtils.initialize(this);
+
+        // Check for debug build to plant the Timber tree
+        // FIX: Ensure BuildConfig is imported correctly
+        if (com.axiomloader.BuildConfig.DEBUG) {
+            Timber.plant(new Timber.DebugTree());
         }
-    }
-    
-    @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-        
-        if (logUtils != null) {
-            logUtils.warn("AxiomApplication", "Low memory warning received");
-        }
-    }
-    
-    @Override
-    public void onTrimMemory(int level) {
-        super.onTrimMemory(level);
-        
-        if (logUtils != null) {
-            logUtils.warn("AxiomApplication", "Memory trim requested, level: " + level);
-        }
+
+        // You can also use LogUtils directly for logging application lifecycle events
+        LogUtils.logInfo("AxiomApplication", "Application onCreate() called.");
     }
 }
-==== END FILE: Axiom/app/src/main/java/com/axiomloader/AxiomApplication.java ====
 
-==== BEGIN FILE: Axiom/app/src/main/java/com/axiomloader/MainActivity.java ====
+
+// File: Axiom/app/src/main/java/com/axiomloader/MainActivity.java
+
 package com.axiomloader;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
+import com.axiomloader.databinding.ActivityMainBinding;
 import com.axiomloader.ui.LoggingActivity;
-import com.axiomloader.utils.LogUtils;
+import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
     
-    private Button logsButton;
-    private LogUtils logUtils;
+    private ActivityMainBinding binding;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         
-        // Initialize LogUtils
-        logUtils = LogUtils.getInstance(this);
-        logUtils.info("MainActivity", "Application started");
+        setSupportActionBar(binding.toolbar);
         
-        initializeViews();
-        setupClickListeners();
-        
-        logUtils.debug("MainActivity", "MainActivity onCreate completed");
-    }
-    
-    private void initializeViews() {
-        logsButton = findViewById(R.id.btn_logs);
-        
-        // Style the logs button
-        logsButton.setBackground(ContextCompat.getDrawable(this, android.R.drawable.btn_default));
-        logsButton.setTextColor(ContextCompat.getColor(this, android.R.color.white));
-        logsButton.setTextSize(16f);
-        logsButton.setPadding(32, 16, 32, 16);
-        
-        logUtils.debug("MainActivity", "Views initialized");
-    }
-    
-    private void setupClickListeners() {
-        logsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                logUtils.info("MainActivity", "Logs button clicked - navigating to LoggingActivity");
-                
-                Intent intent = new Intent(MainActivity.this, LoggingActivity.class);
-                startActivity(intent);
-            }
+        // Set up the logs button
+        binding.logsButton.setOnClickListener(v -> {
+            Timber.i("Opening Logging Activity from MainActivity");
+            Intent intent = new Intent(this, LoggingActivity.class);
+            startActivity(intent);
         });
         
-        logUtils.debug("MainActivity", "Click listeners setup completed");
-    }
-    
-    @Override
-    protected void onResume() {
-        super.onResume();
-        logUtils.debug("MainActivity", "MainActivity resumed");
-    }
-    
-    @Override
-    protected void onPause() {
-        super.onPause();
-        logUtils.debug("MainActivity", "MainActivity paused");
+        // Log app startup
+        Timber.i("MainActivity created successfully");
     }
     
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        logUtils.info("MainActivity", "MainActivity destroyed");
-        
-        // Don't shutdown LogUtils here as it's a singleton and might be used by other activities
+        this.binding = null;
+        Timber.d("MainActivity destroyed");
     }
 }
-==== END FILE: Axiom/app/src/main/java/com/axiomloader/MainActivity.java ====
 
-==== BEGIN FILE: Axiom/app/src/main/java/com/axiomloader/ui/LoggingActivity.java ====
+// File: Axiom/app/src/main/java/com/axiomloader/ui/LogAdapter.java
+
 package com.axiomloader.ui;
 
-import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.text.Editable;
-import android.text.Html;
-import android.text.Spannable;
 import android.text.SpannableString;
-import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.ScrollView;
-import android.widget.SeekBar;
-import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.axiomloader.R;
 import com.axiomloader.utils.LogUtils;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+public class LogAdapter extends RecyclerView.Adapter<LogAdapter.LogViewHolder> {
+    
+    private Context context;
+    private List<LogUtils.LogEntry> logs;
+    private SimpleDateFormat timeFormat;
+    private SimpleDateFormat fullDateFormat;
+    private OnLogActionListener actionListener;
+    
+    // Color scheme for different log levels
+    private static final int COLOR_VERBOSE = Color.parseColor("#757575"); // Gray
+    private static final int COLOR_DEBUG = Color.parseColor("#2196F3"); // Blue
+    private static final int COLOR_INFO = Color.parseColor("#4CAF50"); // Green
+    private static final int COLOR_WARN = Color.parseColor("#FF9800"); // Orange
+    private static final int COLOR_ERROR = Color.parseColor("#F44336"); // Red
+    private static final int COLOR_WTF = Color.parseColor("#9C27B0"); // Purple
+    
+    public interface OnLogActionListener {
+        void onFilterByTag(String tag);
+        void onFilterByLevel(LogUtils.LogLevel level);
+    }
+    
+    public LogAdapter(Context context) {
+        this.context = context;
+        this.logs = new ArrayList<>();
+        this.timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault());
+        this.fullDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
+    }
+    
+    public void setLogs(List<LogUtils.LogEntry> logs) {
+        this.logs = logs != null ? logs : new ArrayList<>();
+        notifyDataSetChanged();
+    }
+    
+    public void addLog(LogUtils.LogEntry log) {
+        logs.add(log);
+        notifyItemInserted(logs.size() - 1);
+    }
+    
+    public void clearLogs() {
+        logs.clear();
+        notifyDataSetChanged();
+    }
+    
+    public void setOnLogActionListener(OnLogActionListener listener) {
+        this.actionListener = listener;
+    }
+    
+    @NonNull
+    @Override
+    public LogViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_log_entry, parent, false);
+        return new LogViewHolder(view);
+    }
+    
+    @Override
+    public void onBindViewHolder(@NonNull LogViewHolder holder, int position) {
+        LogUtils.LogEntry log = logs.get(position);
+        holder.bind(log);
+    }
+    
+    @Override
+    public int getItemCount() {
+        return logs.size();
+    }
+    
+    private int getColorForLogLevel(String level) {
+        switch (level) {
+            case "VERBOSE":
+                return COLOR_VERBOSE;
+            case "DEBUG":
+                return COLOR_DEBUG;
+            case "INFO":
+                return COLOR_INFO;
+            case "WARN":
+                return COLOR_WARN;
+            case "ERROR":
+                return COLOR_ERROR;
+            case "WTF":
+            case "ASSERT":
+                return COLOR_WTF;
+            default:
+                return Color.BLACK;
+        }
+    }
+    
+    private String getShortLogLevel(String level) {
+        switch (level) {
+            case "VERBOSE": return "V";
+            case "DEBUG": return "D";
+            case "INFO": return "I";
+            case "WARN": return "W";
+            case "ERROR": return "E";
+            case "WTF":
+            case "ASSERT": return "A";
+            default: return "?";
+        }
+    }
+    
+    private String getSimpleClassName(String fullClassName) {
+        if (fullClassName == null) return "Unknown";
+        int lastDot = fullClassName.lastIndexOf('.');
+        return lastDot >= 0 ? fullClassName.substring(lastDot + 1) : fullClassName;
+    }
+    
+    private LogUtils.LogLevel getLogLevelFromString(String levelString) {
+        switch (levelString) {
+            case "VERBOSE": return LogUtils.LogLevel.VERBOSE;
+            case "DEBUG": return LogUtils.LogLevel.DEBUG;
+            case "INFO": return LogUtils.LogLevel.INFO;
+            case "WARN": return LogUtils.LogLevel.WARN;
+            case "ERROR": return LogUtils.LogLevel.ERROR;
+            case "WTF":
+            case "ASSERT": return LogUtils.LogLevel.WTF;
+            default: return LogUtils.LogLevel.DEBUG;
+        }
+    }
+    
+    class LogViewHolder extends RecyclerView.ViewHolder {
+        
+        private TextView tvTimestamp;
+        private TextView tvLevel;
+        private TextView tvTag;
+        private TextView tvMessage;
+        private TextView tvThread;
+        private TextView tvLocation;
+        private View levelIndicator;
+        
+        public LogViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvTimestamp = itemView.findViewById(R.id.tv_timestamp);
+            tvLevel = itemView.findViewById(R.id.tv_level);
+            tvTag = itemView.findViewById(R.id.tv_tag);
+            tvMessage = itemView.findViewById(R.id.tv_message);
+            tvThread = itemView.findViewById(R.id.tv_thread);
+            tvLocation = itemView.findViewById(R.id.tv_location);
+            levelIndicator = itemView.findViewById(R.id.level_indicator);
+        }
+        
+        public void bind(LogUtils.LogEntry log) {
+            // Set timestamp
+            Date date = new Date(log.timestamp);
+            tvTimestamp.setText(timeFormat.format(date));
+            
+            // Set log level with color
+            String levelText = getShortLogLevel(log.level);
+            tvLevel.setText(levelText);
+            int levelColor = getColorForLogLevel(log.level);
+            tvLevel.setTextColor(levelColor);
+            levelIndicator.setBackgroundColor(levelColor);
+            
+            // Set tag with color
+            SpannableString tagSpan = new SpannableString(log.tag);
+            tagSpan.setSpan(new ForegroundColorSpan(levelColor), 0, log.tag.length(), 0);
+            tvTag.setText(tagSpan);
+            
+            // Set message
+            tvMessage.setText(log.message);
+            
+            // Set thread info if available
+            if (log.threadName != null && !log.threadName.isEmpty()) {
+                tvThread.setText("[" + log.threadName + "]");
+                tvThread.setVisibility(View.VISIBLE);
+                tvThread.setTextColor(Color.GRAY);
+            } else {
+                tvThread.setVisibility(View.GONE);
+            }
+            
+            // Set location info if available
+            if (log.className != null && log.methodName != null) {
+                String className = getSimpleClassName(log.className);
+                String location = className + "." + log.methodName + ":" + log.lineNumber;
+                tvLocation.setText("(" + location + ")");
+                tvLocation.setVisibility(View.VISIBLE);
+                tvLocation.setTextColor(Color.GRAY);
+            } else {
+                tvLocation.setVisibility(View.GONE);
+            }
+            
+            // Set click listener for expanded view
+            itemView.setOnClickListener(v -> showLogDetails(log));
+            
+            // Long click for actions menu
+            itemView.setOnLongClickListener(v -> {
+                showLogActionMenu(log);
+                return true;
+            });
+        }
+        
+        private void showLogDetails(LogUtils.LogEntry log) {
+            StringBuilder details = new StringBuilder();
+            
+            details.append("TIMESTAMP: ").append(fullDateFormat.format(new Date(log.timestamp))).append("\n");
+            details.append("LEVEL: ").append(log.level).append("\n");
+            details.append("TAG: ").append(log.tag).append("\n");
+            details.append("MESSAGE: ").append(log.message).append("\n");
+            
+            if (log.threadName != null && !log.threadName.isEmpty()) {
+                details.append("THREAD: ").append(log.threadName).append("\n");
+            }
+            
+            if (log.className != null) {
+                details.append("CLASS: ").append(log.className).append("\n");
+                details.append("METHOD: ").append(log.methodName).append("\n");
+                details.append("LINE: ").append(log.lineNumber).append("\n");
+            }
+            
+            if (log.metadata != null && !log.metadata.isEmpty()) {
+                details.append("\nMETADATA:\n");
+                for (String key : log.metadata.keySet()) {
+                    Object value = log.metadata.get(key);
+                    details.append("  ").append(key).append(": ").append(value != null ? value.toString() : "null").append("\n");
+                }
+            }
+            
+            new AlertDialog.Builder(context)
+                .setTitle("Log Entry Details")
+                .setMessage(details.toString())
+                .setPositiveButton("Close", null)
+                .setNeutralButton("Copy", (dialog, which) -> {
+                    copyToClipboard("Log Entry Details", details.toString());
+                })
+                .setNegativeButton("Share", (dialog, which) -> {
+                    shareText("Log Entry Details", details.toString());
+                })
+                .show();
+        }
+        
+        private void showLogActionMenu(LogUtils.LogEntry log) {
+            String[] actions = {"Copy Message", "Copy Full Log", "Filter by Tag", "Filter by Level", "Share Log", "Show Details"};
+            
+            new AlertDialog.Builder(context)
+                .setTitle("Log Actions")
+                .setItems(actions, (dialog, which) -> {
+                    switch (which) {
+                        case 0: // Copy Message
+                            copyToClipboard("Log Message", log.message);
+                            break;
+                        case 1: // Copy Full Log
+                            String fullLog = String.format("%s %s/%s: %s", 
+                                fullDateFormat.format(new Date(log.timestamp)),
+                                getShortLogLevel(log.level), log.tag, log.message);
+                            copyToClipboard("Full Log", fullLog);
+                            break;
+                        case 2: // Filter by Tag
+                            if (actionListener != null) {
+                                actionListener.onFilterByTag(log.tag);
+                            } else {
+                                Toast.makeText(context, "Filter by tag: " + log.tag, Toast.LENGTH_SHORT).show();
+                            }
+                            break;
+                        case 3: // Filter by Level
+                            if (actionListener != null) {
+                                LogUtils.LogLevel level = getLogLevelFromString(log.level);
+                                actionListener.onFilterByLevel(level);
+                            } else {
+                                Toast.makeText(context, "Filter by level: " + log.level, Toast.LENGTH_SHORT).show();
+                            }
+                            break;
+                        case 4: // Share Log
+                            shareLog(log);
+                            break;
+                        case 5: // Show Details
+                            showLogDetails(log);
+                            break;
+                    }
+                })
+                .show();
+        }
+        
+        private void copyToClipboard(String label, String text) {
+            ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText(label, text);
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show();
+        }
+        
+        private void shareLog(LogUtils.LogEntry log) {
+            StringBuilder shareText = new StringBuilder();
+            shareText.append("=== AXIOM LOG ENTRY ===\n");
+            shareText.append("Time: ").append(fullDateFormat.format(new Date(log.timestamp))).append("\n");
+            shareText.append("Level: ").append(log.level).append("\n");
+            shareText.append("Tag: ").append(log.tag).append("\n");
+            shareText.append("Message: ").append(log.message).append("\n");
+            
+            if (log.threadName != null && !log.threadName.isEmpty()) {
+                shareText.append("Thread: ").append(log.threadName).append("\n");
+            }
+            
+            if (log.className != null) {
+                shareText.append("Location: ").append(getSimpleClassName(log.className))
+                         .append(".").append(log.methodName).append(":").append(log.lineNumber).append("\n");
+            }
+            
+            if (log.metadata != null && !log.metadata.isEmpty()) {
+                shareText.append("\nMetadata:\n");
+                for (String key : log.metadata.keySet()) {
+                    Object value = log.metadata.get(key);
+                    shareText.append("- ").append(key).append(": ").append(value != null ? value.toString() : "null").append("\n");
+                }
+            }
+            
+            shareText(log.level + " Log from " + log.tag, shareText.toString());
+        }
+        
+        private void shareText(String subject, String text) {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, text);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+            context.startActivity(Intent.createChooser(shareIntent, "Share Log"));
+        }
+    }
+    
+    /**
+     * Get filtered logs count
+     */
+    public int getFilteredCount() {
+        return logs.size();
+    }
+    
+    /**
+     * Get log at specific position
+     */
+    public LogUtils.LogEntry getLogAt(int position) {
+        if (position >= 0 && position < logs.size()) {
+            return logs.get(position);
+        }
+        return null;
+    }
+    
+    /**
+     * Update single log entry
+     */
+    public void updateLog(int position, LogUtils.LogEntry log) {
+        if (position >= 0 && position < logs.size()) {
+            logs.set(position, log);
+            notifyItemChanged(position);
+        }
+    }
+    
+    /**
+     * Remove log at position
+     */
+    public void removeLog(int position) {
+        if (position >= 0 && position < logs.size()) {
+            logs.remove(position);
+            notifyItemRemoved(position);
+        }
+    }
+    
+    /**
+     * Insert log at specific position
+     */
+    public void insertLog(int position, LogUtils.LogEntry log) {
+        if (position >= 0 && position <= logs.size()) {
+            logs.add(position, log);
+            notifyItemInserted(position);
+        }
+    }
+    
+    /**
+     * Get all logs
+     */
+    public List<LogUtils.LogEntry> getAllLogs() {
+        return new ArrayList<>(logs);
+    }
+    
+    /**
+     * Check if adapter is empty
+     */
+    public boolean isEmpty() {
+        return logs.isEmpty();
+    }
+    
+    /**
+     * Get logs by level
+     */
+    public List<LogUtils.LogEntry> getLogsByLevel(String level) {
+        List<LogUtils.LogEntry> filteredLogs = new ArrayList<>();
+        for (LogUtils.LogEntry log : logs) {
+            if (log.level.equals(level)) {
+                filteredLogs.add(log);
+            }
+        }
+        return filteredLogs;
+    }
+    
+    /**
+     * Get logs by tag
+     */
+    public List<LogUtils.LogEntry> getLogsByTag(String tag) {
+        List<LogUtils.LogEntry> filteredLogs = new ArrayList<>();
+        for (LogUtils.LogEntry log : logs) {
+            if (log.tag.equals(tag)) {
+                filteredLogs.add(log);
+            }
+        }
+        return filteredLogs;
+    }
+    
+    /**
+     * Search logs by message
+     */
+    public List<LogUtils.LogEntry> searchLogs(String query) {
+        List<LogUtils.LogEntry> searchResults = new ArrayList<>();
+        String lowerQuery = query.toLowerCase();
+        
+        for (LogUtils.LogEntry log : logs) {
+            if (log.message.toLowerCase().contains(lowerQuery) || 
+                log.tag.toLowerCase().contains(lowerQuery)) {
+                searchResults.add(log);
+            }
+        }
+        return searchResults;
+    }
+}
+
+// File: Axiom/app/src/main/java/com/axiomloader/ui/LoggingActivity.java
+
+package com.axiomloader.ui;
+
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+
+import com.axiomloader.R;
+import com.axiomloader.databinding.ActivityLoggingBinding;
+import com.axiomloader.utils.LogUtils;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -386,176 +856,84 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 public class LoggingActivity extends AppCompatActivity {
     
-    // UI Components
-    private TextView logDisplay;
-    private ScrollView logScrollView;
-    private EditText searchEditText;
-    private Spinner logLevelSpinner;
-    private Spinner threadFilterSpinner;
-    private Spinner loggerFilterSpinner;
-    private Button btnClearLogs, btnRefreshLogs, btnPauseLogs, btnExportLogs;
-    private Button btnGenerateTestLogs, btnSettings, btnStats;
-    private CheckBox cbAutoScroll, cbRegexSearch, cbCaseSensitive, cbRealTimeLogging;
-    private Switch switchColorCoding, switchDarkTheme;
-    private SeekBar seekBarBufferSize;
-    private ProgressBar progressBar;
-    private SwipeRefreshLayout swipeRefreshLayout;
-    private LinearLayout statsContainer, filtersContainer, settingsContainer;
-    
-    // Statistics TextViews
-    private TextView tvTotalLogs, tvErrorCount, tvWarnCount, tvFileSize, tvOldestLog, tvNewestLog;
-    
-    // Core Components
+    private ActivityLoggingBinding binding;
+    private LogAdapter logAdapter;
     private LogUtils logUtils;
-    private SharedPreferences prefs;
-    private Handler mainHandler;
-    private ExecutorService executorService;
+    private List<LogUtils.LogEntry> allLogs;
+    private List<LogUtils.LogEntry> filteredLogs;
+    private LogUtils.LogLevel selectedLevel = null;
+    private String selectedTag = null;
+    private String searchQuery = "";
     
-    // State Variables
-    private boolean isPaused = false;
-    private boolean autoScroll = true;
-    private boolean realTimeLogging = true;
-    private String currentSearchQuery = "";
-    private String currentLogLevel = "ALL";
-    private String currentThreadFilter = "ALL";
-    private String currentLoggerFilter = "ALL";
-    private List<String> logEntries = new ArrayList<>();
-    private List<String> filteredLogEntries = new ArrayList<>();
+    private static final String TAG = "LoggingActivity";
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_logging);
+        binding = ActivityLoggingBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         
-        initializeComponents();
-        initializeViews();
-        setupEventListeners();
-        loadSettings();
-        startRealTimeUpdates();
-        
-        LogUtils.getInstance(this).info("LoggingActivity", "LoggingActivity created successfully");
-    }
-    
-    private void initializeComponents() {
-        logUtils = LogUtils.getInstance(this);
-        prefs = getSharedPreferences("LoggingPrefs", Context.MODE_PRIVATE);
-        mainHandler = new Handler(Looper.getMainLooper());
-        executorService = Executors.newSingleThreadExecutor();
-        
+        setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle(getString(R.string.logging_title));
+            getSupportActionBar().setTitle("Advanced Logging System");
         }
+        
+        logUtils = LogUtils.getInstance();
+        initializeViews();
+        setupRecyclerView();
+        setupSpinners();
+        setupSearchView();
+        setupButtons();
+        loadLogs();
+        updateStats();
+        
+        LogUtils.logInfo(TAG, "LoggingActivity created");
     }
     
     private void initializeViews() {
-        logDisplay = findViewById(R.id.tv_log_display);
-        logScrollView = findViewById(R.id.scroll_log_display);
-        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
-        progressBar = findViewById(R.id.progress_bar);
-        searchEditText = findViewById(R.id.et_search_logs);
-        logLevelSpinner = findViewById(R.id.spinner_log_level);
-        threadFilterSpinner = findViewById(R.id.spinner_thread_filter);
-        loggerFilterSpinner = findViewById(R.id.spinner_logger_filter);
+        // Setup log level spinner
+        ArrayAdapter<String> levelAdapter = new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_item,
+            new String[]{"All Levels", "VERBOSE", "DEBUG", "INFO", "WARN", "ERROR", "WTF"});
+        levelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.spinnerLogLevel.setAdapter(levelAdapter);
         
-        btnClearLogs = findViewById(R.id.btn_clear_logs);
-        btnRefreshLogs = findViewById(R.id.btn_refresh_logs);
-        btnPauseLogs = findViewById(R.id.btn_pause_logs);
-        btnExportLogs = findViewById(R.id.btn_export_logs);
-        btnGenerateTestLogs = findViewById(R.id.btn_generate_test_logs);
-        btnSettings = findViewById(R.id.btn_settings);
-        btnStats = findViewById(R.id.btn_stats);
+        // Setup tag spinner
+        updateTagSpinner();
         
-        cbAutoScroll = findViewById(R.id.cb_auto_scroll);
-        cbRegexSearch = findViewById(R.id.cb_regex_search);
-        cbCaseSensitive = findViewById(R.id.cb_case_sensitive);
-        cbRealTimeLogging = findViewById(R.id.cb_real_time_logging);
-        switchColorCoding = findViewById(R.id.switch_color_coding);
-        switchDarkTheme = findViewById(R.id.switch_dark_theme);
+        // Set default values
+        binding.etLogTag.setText("CUSTOM");
+        binding.etLogMessage.setHint("Enter your log message here...");
+    }
+    
+    private void setupRecyclerView() {
+        logAdapter = new LogAdapter(this);
+        binding.recyclerViewLogs.setLayoutManager(new LinearLayoutManager(this));
+        binding.recyclerViewLogs.setAdapter(logAdapter);
         
-        seekBarBufferSize = findViewById(R.id.seekbar_buffer_size);
-        statsContainer = findViewById(R.id.stats_container);
-        filtersContainer = findViewById(R.id.filters_container);
-        settingsContainer = findViewById(R.id.settings_container);
-        
-        tvTotalLogs = findViewById(R.id.tv_total_logs);
-        tvErrorCount = findViewById(R.id.tv_error_count);
-        tvWarnCount = findViewById(R.id.tv_warn_count);
-        tvFileSize = findViewById(R.id.tv_file_size);
-        tvOldestLog = findViewById(R.id.tv_oldest_log);
-        tvNewestLog = findViewById(R.id.tv_newest_log);
-        
-        setupSpinners();
-        setupDefaultValues();
-        
-        // Debug check - verify all critical UI elements are found
-        logUtils.debug("LoggingActivity", "UI initialization check:");
-        logUtils.debug("LoggingActivity", "Settings button: " + (btnSettings != null ? "found" : "NOT FOUND"));
-        logUtils.debug("LoggingActivity", "Stats button: " + (btnStats != null ? "found" : "NOT FOUND"));
-        logUtils.debug("LoggingActivity", "Settings container: " + (settingsContainer != null ? "found" : "NOT FOUND"));
-        logUtils.debug("LoggingActivity", "Stats container: " + (statsContainer != null ? "found" : "NOT FOUND"));
+        // Auto-scroll to bottom when new logs are added
+        logAdapter.registerAdapterDataObserver(new androidx.recyclerview.widget.RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                binding.recyclerViewLogs.scrollToPosition(logAdapter.getItemCount() - 1);
+            }
+        });
     }
     
     private void setupSpinners() {
-        String[] logLevels = {"ALL", "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
-        ArrayAdapter<String> logLevelAdapter = new ArrayAdapter<>(this, 
-            android.R.layout.simple_spinner_item, logLevels);
-        logLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        logLevelSpinner.setAdapter(logLevelAdapter);
-        
-        List<String> threads = logUtils.getAllThreadNames();
-        threads.add(0, "ALL");
-        ArrayAdapter<String> threadAdapter = new ArrayAdapter<>(this,
-            android.R.layout.simple_spinner_item, threads);
-        threadAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        threadFilterSpinner.setAdapter(threadAdapter);
-        
-        List<String> loggers = logUtils.getAllLoggerNames();
-        loggers.add(0, "ALL");
-        ArrayAdapter<String> loggerAdapter = new ArrayAdapter<>(this,
-            android.R.layout.simple_spinner_item, loggers);
-        loggerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        loggerFilterSpinner.setAdapter(loggerAdapter);
-    }
-    
-    private void setupDefaultValues() {
-        cbAutoScroll.setChecked(true);
-        cbRealTimeLogging.setChecked(true);
-        switchColorCoding.setChecked(true);
-        seekBarBufferSize.setProgress(50);
-    }
-    
-    private void setupEventListeners() {
-        swipeRefreshLayout.setOnRefreshListener(() -> {
-            refreshLogDisplay();
-            swipeRefreshLayout.setRefreshing(false);
-        });
-        
-        searchEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                currentSearchQuery = s.toString();
-                filterLogs();
-            }
-            
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
-        
-        logLevelSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        binding.spinnerLogLevel.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String[] logLevels = {"ALL", "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
-                currentLogLevel = logLevels[position];
+                if (position == 0) {
+                    selectedLevel = null;
+                } else {
+                    selectedLevel = LogUtils.LogLevel.values()[position - 1];
+                }
                 filterLogs();
             }
             
@@ -563,1890 +941,2058 @@ public class LoggingActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
         
-        btnClearLogs.setOnClickListener(v -> showClearLogsDialog());
-        btnRefreshLogs.setOnClickListener(v -> refreshLogDisplay());
-        btnPauseLogs.setOnClickListener(v -> togglePauseResume());
-        btnExportLogs.setOnClickListener(v -> showExportDialog());
-        btnGenerateTestLogs.setOnClickListener(v -> generateTestLogs());
-        
-        btnSettings.setOnClickListener(v -> {
-            logUtils.debug("LoggingActivity", "Settings button clicked");
-            toggleSettingsVisibility();
-        });
-        
-        btnStats.setOnClickListener(v -> {
-            logUtils.debug("LoggingActivity", "Stats button clicked"); 
-            toggleStatsVisibility();
-        });
-        
-        cbAutoScroll.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            autoScroll = isChecked;
-            if (autoScroll) scrollToBottom();
-        });
-        
-        cbRealTimeLogging.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            realTimeLogging = isChecked;
-            if (realTimeLogging) {
-                startRealTimeUpdates();
-            } else {
-                stopRealTimeUpdates();
+        binding.spinnerTag.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 0) {
+                    selectedTag = null;
+                } else {
+                    selectedTag = (String) parent.getItemAtPosition(position);
+                }
+                filterLogs();
             }
+            
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
         
-        switchColorCoding.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            refreshLogDisplay();
-        });
-        
-        switchDarkTheme.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            applyTheme(isChecked);
+        // Setup custom log level spinner
+        ArrayAdapter<String> customLevelAdapter = new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_item,
+            new String[]{"VERBOSE", "DEBUG", "INFO", "WARN", "ERROR", "WTF"});
+        customLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.spinnerCustomLogLevel.setAdapter(customLevelAdapter);
+        binding.spinnerCustomLogLevel.setSelection(2); // Default to INFO
+    }
+    
+    private void setupSearchView() {
+        binding.etSearchLogs.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                searchQuery = s.toString();
+                filterLogs();
+            }
+            
+            @Override
+            public void afterTextChanged(Editable s) {}
         });
     }
     
-    private void startRealTimeUpdates() {
-        stopRealTimeUpdates();
-        if (realTimeLogging && !isPaused) {
-            mainHandler.post(logUpdateRunnable);
-        }
+    private void setupButtons() {
+        binding.btnSendLog.setOnClickListener(v -> sendCustomLog());
+        binding.btnClearLogs.setOnClickListener(v -> showClearLogsDialog());
+        binding.btnExportLogs.setOnClickListener(v -> showExportDialog());
+        binding.btnRefresh.setOnClickListener(v -> refreshLogs());
+        binding.btnSettings.setOnClickListener(v -> showSettingsDialog());
+        binding.btnStats.setOnClickListener(v -> showStatsDialog());
+        binding.btnPerformanceTest.setOnClickListener(v -> runPerformanceTest());
+        binding.btnGenerateTestLogs.setOnClickListener(v -> generateTestLogs());
     }
     
-    private void stopRealTimeUpdates() {
-        if (mainHandler != null) {
-            mainHandler.removeCallbacks(logUpdateRunnable);
-        }
-    }
-    
-    private final Runnable logUpdateRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (realTimeLogging && !isPaused) {
-                refreshLogDisplay();
-                mainHandler.postDelayed(this, 1000);
-            }
-        }
-    };
-    
-    private void refreshLogDisplay() {
-        executorService.execute(() -> {
-            try {
-                logEntries = logUtils.getAllLogsFormatted();
-                
-                mainHandler.post(() -> {
-                    filterLogs();
-                    updateStatistics();
-                    if (autoScroll) scrollToBottom();
-                });
-            } catch (Exception e) {
-                mainHandler.post(() -> {
-                    Toast.makeText(this, "Error refreshing logs: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
-            }
-        });
+    private void loadLogs() {
+        new Thread(() -> {
+            allLogs = logUtils.getAllLogEntries();
+            runOnUiThread(() -> {
+                filterLogs();
+                binding.tvLogCount.setText("Total Logs: " + allLogs.size());
+            });
+        }).start();
     }
     
     private void filterLogs() {
-        filteredLogEntries.clear();
+        if (allLogs == null) return;
         
-        for (String log : logEntries) {
-            if (passesAllFilters(log)) {
-                filteredLogEntries.add(log);
+        filteredLogs = new ArrayList<>();
+        
+        for (LogUtils.LogEntry entry : allLogs) {
+            boolean matches = true;
+            
+            // Filter by level
+            if (selectedLevel != null && !entry.level.equals(selectedLevel.fullName)) {
+                matches = false;
+            }
+            
+            // Filter by tag
+            if (selectedTag != null && !entry.tag.equals(selectedTag)) {
+                matches = false;
+            }
+            
+            // Filter by search query
+            if (!searchQuery.isEmpty() && 
+                !entry.message.toLowerCase().contains(searchQuery.toLowerCase()) &&
+                !entry.tag.toLowerCase().contains(searchQuery.toLowerCase())) {
+                matches = false;
+            }
+            
+            if (matches) {
+                filteredLogs.add(entry);
             }
         }
         
-        displayFilteredLogs();
+        logAdapter.setLogs(filteredLogs);
+        binding.tvFilteredCount.setText("Filtered: " + filteredLogs.size());
     }
     
-    private boolean passesAllFilters(String log) {
-        if (!currentSearchQuery.isEmpty()) {
-            boolean matches = cbCaseSensitive.isChecked() ? 
-                log.contains(currentSearchQuery) : 
-                log.toLowerCase().contains(currentSearchQuery.toLowerCase());
-            
-            if (cbRegexSearch.isChecked()) {
-                try {
-                    Pattern pattern = Pattern.compile(currentSearchQuery, 
-                        cbCaseSensitive.isChecked() ? 0 : Pattern.CASE_INSENSITIVE);
-                    matches = pattern.matcher(log).find();
-                } catch (Exception e) {
-                    matches = false;
-                }
-            }
-            
-            if (!matches) return false;
-        }
+    private void updateTagSpinner() {
+        List<String> tags = new ArrayList<>();
+        tags.add("All Tags");
+        tags.addAll(logUtils.getActiveTags());
         
-        if (!"ALL".equals(currentLogLevel) && !log.contains(currentLogLevel)) {
-            return false;
-        }
-        
-        if (!"ALL".equals(currentThreadFilter) && !log.contains(currentThreadFilter)) {
-            return false;
-        }
-        
-        if (!"ALL".equals(currentLoggerFilter) && !log.contains(currentLoggerFilter)) {
-            return false;
-        }
-        
-        return true;
+        ArrayAdapter<String> tagAdapter = new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_item, tags);
+        tagAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.spinnerTag.setAdapter(tagAdapter);
     }
     
-    /**
-     * IMPROVED: Display filtered logs with much better formatting
-     */
-    private void displayFilteredLogs() {
-        StringBuilder displayText = new StringBuilder();
+    private void sendCustomLog() {
+        String message = binding.etLogMessage.getText().toString().trim();
+        String tag = binding.etLogTag.getText().toString().trim();
         
-        if (filteredLogEntries.isEmpty()) {
-            displayText.append("No logs match the current filters.\n\n");
-            displayText.append("Try:\n");
-            displayText.append("• Clearing search terms\n");
-            displayText.append("• Changing log level filter\n");
-            displayText.append("• Generating test logs\n");
-            displayText.append("• Refreshing the display");
-        } else {
-            for (String log : filteredLogEntries) {
-                String cleanedLog = cleanLogEntry(log);
-                displayText.append(cleanedLog).append("\n\n");
-            }
+        if (message.isEmpty()) {
+            Toast.makeText(this, "Please enter a log message", Toast.LENGTH_SHORT).show();
+            return;
         }
         
-        if (switchColorCoding.isChecked()) {
-            logDisplay.setText(Html.fromHtml(colorCodeLogs(displayText.toString())));
-        } else {
-            logDisplay.setText(displayText.toString());
-        }
-    }
-    
-    /**
-     * IMPROVED: Clean log entries for better readability
-     */
-    private String cleanLogEntry(String rawLog) {
-        try {
-            if (rawLog == null || rawLog.trim().isEmpty()) {
-                return "";
-            }
-            
-            String cleaned = rawLog.trim();
-            
-            // Remove excessive session IDs and thread info for cleaner display
-            cleaned = cleaned.replaceAll("\\[AX_\\d+_[^\\]]+\\]\\s*", "");
-            cleaned = cleaned.replaceAll("\\[LogUtils-Worker\\]\\s*", "");
-            cleaned = cleaned.replaceAll("\\[LogUtils-Scheduled\\]\\s*", "");
-            
-            // Clean up package names for better readability
-            cleaned = cleaned.replace("com.axiomloader.", "");
-            
-            // Ensure proper spacing around log levels
-            cleaned = cleaned.replaceAll("\\[([A-Z]+)\\]", " [$1] ");
-            
-            // Clean up multiple spaces
-            cleaned = cleaned.replaceAll("\\s+", " ");
-            
-            // Ensure timestamp is properly formatted
-            cleaned = cleaned.replaceAll("(\\d{2}:\\d{2}:\\d{2}\\.\\d{3})", "[$1]");
-            
-            return cleaned.trim();
-        } catch (Exception e) {
-            return rawLog; // Return original if cleaning fails
-        }
-    }
-    
-    /**
-     * IMPROVED: Color coding with better contrast and HTML formatting
-     */
-    private String colorCodeLogs(String logs) {
-        // Convert line breaks to HTML
-        logs = logs.replace("\n\n", "<br/><br/>");
-        logs = logs.replace("\n", "<br/>");
-        
-        // Color code by log level with better contrast for dark theme
-        logs = logs.replaceAll("\\[(ERROR|FATAL)\\]", "<font color='#FF4444'><b>[$1]</b></font>");
-        logs = logs.replaceAll("\\[WARN\\]", "<font color='#FFAA00'><b>[WARN]</b></font>");
-        logs = logs.replaceAll("\\[INFO\\]", "<font color='#00DD00'><b>[INFO]</b></font>");
-        logs = logs.replaceAll("\\[DEBUG\\]", "<font color='#00AAFF'><b>[DEBUG]</b></font>");
-        logs = logs.replaceAll("\\[TRACE\\]", "<font color='#AA00FF'><b>[TRACE]</b></font>");
-        
-        // Highlight timestamps
-        logs = logs.replaceAll("(\\[\\d{2}:\\d{2}:\\d{2}\\.\\d{3}\\])", 
-                "<font color='#CCCCCC'><i>$1</i></font>");
-        
-        // Highlight logger names
-        logs = logs.replaceAll("\\b(MainActivity|LogUtils|DatabaseManager|NetworkService)\\b", 
-                "<font color='#FFDD00'><b>$1</b></font>");
-        
-        // Highlight error keywords
-        logs = logs.replaceAll("\\b(Exception|Error|Failed|Timeout)\\b", 
-                "<font color='#FF6666'><b>$1</b></font>");
-        
-        return logs;
-    }
-    
-    private void updateStatistics() {
-        int totalLogs = logEntries.size();
-        int errorCount = 0;
-        int warnCount = 0;
-        
-        for (String log : logEntries) {
-            if (log.contains("ERROR") || log.contains("FATAL")) errorCount++;
-            if (log.contains("WARN")) warnCount++;
+        if (tag.isEmpty()) {
+            tag = "CUSTOM";
         }
         
-        long fileSize = logUtils.getTotalLogFileSize();
-        String oldestLog = logUtils.getOldestLogTimestamp();
-        String newestLog = logUtils.getNewestLogTimestamp();
+        int levelPosition = binding.spinnerCustomLogLevel.getSelectedItemPosition();
+        LogUtils.LogLevel level = LogUtils.LogLevel.values()[levelPosition];
         
-        tvTotalLogs.setText("Total: " + totalLogs);
-        tvErrorCount.setText("Errors: " + errorCount);
-        tvWarnCount.setText("Warnings: " + warnCount);
-        tvFileSize.setText("Size: " + formatFileSize(fileSize));
-        tvOldestLog.setText("Oldest: " + oldestLog);
-        tvNewestLog.setText("Newest: " + newestLog);
-    }
-    
-    private String formatFileSize(long bytes) {
-        if (bytes < 1024) return bytes + " B";
-        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
-        return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
-    }
-    
-    private void togglePauseResume() {
-        isPaused = !isPaused;
-        btnPauseLogs.setText(isPaused ? "Resume" : "Pause");
-        
-        if (isPaused) {
-            stopRealTimeUpdates();
-            Toast.makeText(this, "Logging paused", Toast.LENGTH_SHORT).show();
-        } else {
-            startRealTimeUpdates();
-            Toast.makeText(this, "Logging resumed", Toast.LENGTH_SHORT).show();
+        // Send the log
+        switch (level) {
+            case VERBOSE:
+                LogUtils.logVerbose(tag, message);
+                break;
+            case DEBUG:
+                LogUtils.logDebug(tag, message);
+                break;
+            case INFO:
+                LogUtils.logInfo(tag, message);
+                break;
+            case WARN:
+                LogUtils.logWarning(tag, message);
+                break;
+            case ERROR:
+                LogUtils.logError(tag, message);
+                break;
+            case WTF:
+                LogUtils.logWtf(tag, message);
+                break;
         }
+        
+        // Clear the message field
+        binding.etLogMessage.setText("");
+        
+        // Refresh logs
+        refreshLogs();
+        
+        // Show confirmation
+        Snackbar.make(binding.getRoot(), "Log sent: " + level.shortName + "/" + tag, 
+            Snackbar.LENGTH_SHORT).show();
+    }
+    
+    private void refreshLogs() {
+        loadLogs();
+        updateStats();
+        updateTagSpinner();
+        LogUtils.logDebug(TAG, "Logs refreshed");
+    }
+    
+    private void updateStats() {
+        new Thread(() -> {
+            Map<String, Object> stats = logUtils.getLogStatistics();
+            runOnUiThread(() -> {
+                binding.tvMemoryUsage.setText("Memory: " + stats.get("memory_usage_mb") + "MB");
+                binding.tvCpuUsage.setText("CPU: " + stats.get("cpu_usage_percent") + "%");
+                binding.tvBatteryLevel.setText("Battery: " + stats.get("battery_level") + "%");
+                binding.tvNetworkStatus.setText("Network: " + stats.get("network_status"));
+                binding.tvStorageAvailable.setText("Storage: " + stats.get("available_storage_gb") + "GB");
+                binding.tvActiveTags.setText("Active Tags: " + stats.get("active_tags"));
+            });
+        }).start();
     }
     
     private void showClearLogsDialog() {
         new AlertDialog.Builder(this)
-                .setTitle("Clear All Logs")
-                .setMessage("Are you sure you want to clear all logs? This action cannot be undone.")
-                .setPositiveButton("Clear", (dialog, which) -> {
-                    logUtils.clearAllLogs();
-                    refreshLogDisplay();
-                    Toast.makeText(this, "Logs cleared", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+            .setTitle("Clear All Logs")
+            .setMessage("Are you sure you want to clear all logs? This action cannot be undone.")
+            .setPositiveButton("Clear", (dialog, which) -> {
+                logUtils.clearAllLogs();
+                loadLogs();
+                Toast.makeText(this, "All logs cleared", Toast.LENGTH_SHORT).show();
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
     }
     
     private void showExportDialog() {
-        String[] exportOptions = {"TXT", "JSON", "XML", "CSV", "HTML"};
+        String[] formats = {"Text", "JSON", "XML", "CSV"};
+        LogUtils.LogFormat[] logFormats = {
+            LogUtils.LogFormat.SIMPLE,
+            LogUtils.LogFormat.JSON,
+            LogUtils.LogFormat.XML,
+            LogUtils.LogFormat.CSV
+        };
         
         new AlertDialog.Builder(this)
-                .setTitle("Export Format")
-                .setItems(exportOptions, (dialog, which) -> {
-                    String format = exportOptions[which];
-                    exportLogs(format);
-                })
-                .show();
+            .setTitle("Export Logs")
+            .setItems(formats, (dialog, which) -> exportLogs(logFormats[which]))
+            .show();
     }
     
-    private void exportLogs(String format) {
-        executorService.execute(() -> {
+    private void exportLogs(LogUtils.LogFormat format) {
+        new Thread(() -> {
             try {
-                File exportedFile = logUtils.exportLogs(format, filteredLogEntries);
+                File exportFile = logUtils.exportLogs(format);
                 
-                mainHandler.post(() -> {
-                    Toast.makeText(this, "Logs exported to: " + exportedFile.getName(), 
-                            Toast.LENGTH_LONG).show();
+                runOnUiThread(() -> {
+                    // Share the exported file
+                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                    Uri fileUri = FileProvider.getUriForFile(this,
+                        "com.axiomloader.fileprovider", exportFile);
+                    shareIntent.setType("text/*");
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+                    shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     
-                    shareFile(exportedFile);
+                    startActivity(Intent.createChooser(shareIntent, "Share Log Export"));
+                    
+                    Toast.makeText(this, "Logs exported: " + exportFile.getName(), 
+                        Toast.LENGTH_LONG).show();
                 });
+                
             } catch (Exception e) {
-                mainHandler.post(() -> {
-                    Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                runOnUiThread(() -> 
+                    Toast.makeText(this, "Export failed: " + e.getMessage(), 
+                        Toast.LENGTH_LONG).show());
+                LogUtils.logError(TAG, "Export failed", e);
             }
-        });
+        }).start();
     }
     
-    private void shareFile(File file) {
-        try {
-            Uri fileUri = FileProvider.getUriForFile(this, 
-                    getPackageName() + ".fileprovider", file);
+    private void showSettingsDialog() {
+        View settingsView = getLayoutInflater().inflate(R.layout.dialog_log_settings, null);
+        
+        // Get current settings
+        androidx.appcompat.widget.SwitchCompat switchFileLogging = settingsView.findViewById(R.id.switch_file_logging);
+        androidx.appcompat.widget.SwitchCompat switchCompression = settingsView.findViewById(R.id.switch_compression);
+        androidx.appcompat.widget.SwitchCompat switchEncryption = settingsView.findViewById(R.id.switch_encryption);
+        androidx.appcompat.widget.SwitchCompat switchCrashReporting = settingsView.findViewById(R.id.switch_crash_reporting);
+        androidx.appcompat.widget.SwitchCompat switchPerformanceMonitoring = settingsView.findViewById(R.id.switch_performance_monitoring);
+        androidx.appcompat.widget.SwitchCompat switchAutoCleanup = settingsView.findViewById(R.id.switch_auto_cleanup);
+        
+        switchFileLogging.setChecked(logUtils.isFileLoggingEnabled());
+        switchCompression.setChecked(logUtils.isCompressionEnabled());
+        switchEncryption.setChecked(logUtils.isEncryptionEnabled());
+        switchCrashReporting.setChecked(logUtils.isCrashReportingEnabled());
+        switchPerformanceMonitoring.setChecked(logUtils.isPerformanceMonitoringEnabled());
+        switchAutoCleanup.setChecked(logUtils.isAutoCleanupEnabled());
+        
+        new AlertDialog.Builder(this)
+            .setTitle("Log Settings")
+            .setView(settingsView)
+            .setPositiveButton("Save", (dialog, which) -> {
+                // Apply settings
+                logUtils.setFileLoggingEnabled(switchFileLogging.isChecked());
+                logUtils.setCompressionEnabled(switchCompression.isChecked());
+                logUtils.setEncryptionEnabled(switchEncryption.isChecked());
+                logUtils.setCrashReportingEnabled(switchCrashReporting.isChecked());
+                logUtils.setPerformanceMonitoringEnabled(switchPerformanceMonitoring.isChecked());
+                logUtils.setAutoCleanupEnabled(switchAutoCleanup.isChecked());
+                
+                Toast.makeText(this, "Settings saved", Toast.LENGTH_SHORT).show();
+                LogUtils.logInfo(TAG, "Log settings updated");
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+    
+    private void showStatsDialog() {
+        new Thread(() -> {
+            String report = logUtils.generateLogReport();
+            runOnUiThread(() -> {
+                new AlertDialog.Builder(this)
+                    .setTitle("Log Statistics Report")
+                    .setMessage(report)
+                    .setPositiveButton("Share", (dialog, which) -> {
+                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                        shareIntent.setType("text/plain");
+                        shareIntent.putExtra(Intent.EXTRA_TEXT, report);
+                        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Axiom Log Report");
+                        startActivity(Intent.createChooser(shareIntent, "Share Report"));
+                    })
+                    .setNegativeButton("Close", null)
+                    .show();
+            });
+        }).start();
+    }
+    
+    private void runPerformanceTest() {
+        new Thread(() -> {
+            runOnUiThread(() -> {
+                binding.progressBar.setVisibility(View.VISIBLE);
+                Toast.makeText(this, "Running performance test...", Toast.LENGTH_SHORT).show();
+            });
             
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("*/*");
-            shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
-            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            long startTime = System.currentTimeMillis();
             
-            startActivity(Intent.createChooser(shareIntent, "Share Log File"));
-        } catch (Exception e) {
-            Toast.makeText(this, "Unable to share file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+            // Generate various types of logs
+            for (int i = 0; i < 100; i++) {
+                LogUtils.logVerbose("PERF_TEST", "Verbose log message " + i);
+                LogUtils.logDebug("PERF_TEST", "Debug log message " + i);
+                LogUtils.logInfo("PERF_TEST", "Info log message " + i);
+                LogUtils.logWarning("PERF_TEST", "Warning log message " + i);
+                LogUtils.logError("PERF_TEST", "Error log message " + i);
+                
+                if (i % 20 == 0) {
+                    // Log some performance metrics
+                    LogUtils.logMethodEntry("TestClass", "testMethod" + i);
+                    try { Thread.sleep(10); } catch (InterruptedException e) {}
+                    LogUtils.logMethodExit("TestClass", "testMethod" + i);
+                }
+            }
+            
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            
+            runOnUiThread(() -> {
+                binding.progressBar.setVisibility(View.GONE);
+                LogUtils.logInfo(TAG, "Performance test completed in " + duration + "ms (500 logs)");
+                Toast.makeText(this, "Performance test completed in " + duration + "ms", 
+                    Toast.LENGTH_LONG).show();
+                refreshLogs();
+            });
+        }).start();
     }
     
     private void generateTestLogs() {
-        executorService.execute(() -> {
-            logUtils.generateTestLogs(20); // Reduced count for better performance
-            mainHandler.post(() -> {
-                refreshLogDisplay();
-                Toast.makeText(this, "Test logs generated", Toast.LENGTH_SHORT).show();
+        new Thread(() -> {
+            String[] testTags = {"UI", "NETWORK", "DATABASE", "AUTH", "CACHE"};
+            String[] testMessages = {
+                "User clicked button",
+                "Network request completed",
+                "Database query executed",
+                "User authentication successful",
+                "Cache hit for key"
+            };
+            
+            for (int i = 0; i < 50; i++) {
+                String tag = testTags[i % testTags.length];
+                String message = testMessages[i % testMessages.length] + " #" + i;
+                
+                LogUtils.LogLevel level = LogUtils.LogLevel.values()[i % LogUtils.LogLevel.values().length];
+                
+                switch (level) {
+                    case VERBOSE:
+                        LogUtils.logVerbose(tag, message);
+                        break;
+                    case DEBUG:
+                        LogUtils.logDebug(tag, message);
+                        break;
+                    case INFO:
+                        LogUtils.logInfo(tag, message);
+                        break;
+                    case WARN:
+                        LogUtils.logWarning(tag, message);
+                        break;
+                    case ERROR:
+                        LogUtils.logError(tag, message);
+                        break;
+                    case WTF:
+                        LogUtils.logWtf(tag, message);
+                        break;
+                }
+                
+                try { Thread.sleep(50); } catch (InterruptedException e) {}
+            }
+            
+            runOnUiThread(() -> {
+                Toast.makeText(this, "Generated 50 test logs", Toast.LENGTH_SHORT).show();
+                refreshLogs();
             });
-        });
+        }).start();
     }
     
-    private void toggleSettingsVisibility() {
-        if (settingsContainer != null) {
-            boolean isVisible = settingsContainer.getVisibility() == View.VISIBLE;
-            settingsContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
-            
-            // Update button text to show current state
-            btnSettings.setText(isVisible ? "Settings" : "Hide Settings");
-            
-            // Debug logging
-            logUtils.debug("LoggingActivity", "Settings container toggled: " + (isVisible ? "hidden" : "shown"));
-        } else {
-            logUtils.error("LoggingActivity", "Settings container is null!");
-            Toast.makeText(this, "Settings container not found", Toast.LENGTH_SHORT).show();
-        }
-    }
-    
-    private void toggleStatsVisibility() {
-        if (statsContainer != null) {
-            boolean isVisible = statsContainer.getVisibility() == View.VISIBLE;
-            statsContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
-            
-            // Update button text to show current state
-            btnStats.setText(isVisible ? "Statistics" : "Hide Stats");
-            
-            // Debug logging
-            logUtils.debug("LoggingActivity", "Stats container toggled: " + (isVisible ? "hidden" : "shown"));
-        } else {
-            logUtils.error("LoggingActivity", "Stats container is null!");
-            Toast.makeText(this, "Stats container not found", Toast.LENGTH_SHORT).show();
-        }
-    }
-    
-    private void applyTheme(boolean darkTheme) {
-        int bgColor = darkTheme ? Color.BLACK : Color.WHITE;
-        int textColor = darkTheme ? Color.WHITE : Color.BLACK;
-        
-        findViewById(R.id.main_layout).setBackgroundColor(bgColor);
-        logDisplay.setTextColor(textColor);
-        searchEditText.setTextColor(textColor);
-    }
-    
-    private void scrollToBottom() {
-        logScrollView.post(() -> logScrollView.fullScroll(ScrollView.FOCUS_DOWN));
-    }
-    
-    /**
-     * IMPROVED: Copy all logs with proper formatting
-     */
-    public void copyAllLogs(View view) {
-        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        StringBuilder allLogs = new StringBuilder();
-        
-        allLogs.append("=== Axiom Loader Logs ===\n");
-        allLogs.append("Exported: ").append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date())).append("\n");
-        allLogs.append("Total entries: ").append(filteredLogEntries.size()).append("\n");
-        allLogs.append("========================\n\n");
-        
-        for (String log : filteredLogEntries) {
-            allLogs.append(cleanLogEntry(log)).append("\n");
-        }
-        
-        ClipData clip = ClipData.newPlainText("Axiom Logs", allLogs.toString());
-        clipboard.setPrimaryClip(clip);
-        
-        Toast.makeText(this, "Logs copied to clipboard (" + filteredLogEntries.size() + " entries)", 
-                Toast.LENGTH_SHORT).show();
-    }
-    
-    /**
-     * Share current filtered logs
-     */
-    public void shareCurrentLogs(View view) {
-        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("text/plain");
-        
-        StringBuilder logsText = new StringBuilder();
-        logsText.append("Axiom Loader Logs\n");
-        logsText.append("==================\n\n");
-        
-        for (String log : filteredLogEntries) {
-            logsText.append(cleanLogEntry(log)).append("\n");
-        }
-        
-        shareIntent.putExtra(Intent.EXTRA_TEXT, logsText.toString());
-        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Axiom Loader Logs - " + 
-                new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date()));
-        
-        startActivity(Intent.createChooser(shareIntent, "Share Logs"));
-    }
-    
-    /**
-     * Bookmark current view state
-     */
-    public void bookmarkCurrentView(View view) {
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString("bookmark_search", currentSearchQuery);
-        editor.putString("bookmark_level", currentLogLevel);
-        editor.putString("bookmark_thread", currentThreadFilter);
-        editor.putString("bookmark_logger", currentLoggerFilter);
-        editor.putLong("bookmark_time", System.currentTimeMillis());
-        editor.apply();
-        
-        Toast.makeText(this, "Current view bookmarked", Toast.LENGTH_SHORT).show();
-    }
-    
-    private void loadSettings() {
-        autoScroll = prefs.getBoolean("auto_scroll", true);
-        realTimeLogging = prefs.getBoolean("real_time_logging", true);
-        
-        cbAutoScroll.setChecked(autoScroll);
-        cbRealTimeLogging.setChecked(realTimeLogging);
-        switchColorCoding.setChecked(prefs.getBoolean("color_coding", true));
-        switchDarkTheme.setChecked(prefs.getBoolean("dark_theme", false));
-    }
-    
-    private void saveSettings() {
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean("auto_scroll", autoScroll);
-        editor.putBoolean("real_time_logging", realTimeLogging);
-        editor.putBoolean("color_coding", switchColorCoding.isChecked());
-        editor.putBoolean("dark_theme", switchDarkTheme.isChecked());
-        editor.apply();
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.logging_menu, menu);
+        return true;
     }
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
+        int id = item.getItemId();
+        
+        if (id == android.R.id.home) {
             finish();
             return true;
+        } else if (id == R.id.action_refresh) {
+            refreshLogs();
+            return true;
+        } else if (id == R.id.action_clear_search) {
+            binding.etSearchLogs.setText("");
+            binding.spinnerLogLevel.setSelection(0);
+            binding.spinnerTag.setSelection(0);
+            return true;
         }
+        
         return super.onOptionsItemSelected(item);
     }
     
     @Override
     protected void onResume() {
         super.onResume();
-        refreshLogDisplay();
-        if (realTimeLogging && !isPaused) {
-            startRealTimeUpdates();
-        }
-    }
-    
-    @Override
-    protected void onPause() {
-        super.onPause();
-        stopRealTimeUpdates();
-        saveSettings();
+        refreshLogs();
     }
     
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopRealTimeUpdates();
-        if (executorService != null) {
-            executorService.shutdown();
-        }
+        binding = null;
+        LogUtils.logInfo(TAG, "LoggingActivity destroyed");
     }
 }
-==== END FILE: Axiom/app/src/main/java/com/axiomloader/ui/LoggingActivity.java ====
 
-==== BEGIN FILE: Axiom/app/src/main/java/com/axiomloader/utils/LogBootReceiver.java ====
+// File: Axiom/app/src/main/java/com/axiomloader/utils/LogUtils.java
+
 package com.axiomloader.utils;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-
-public class LogBootReceiver extends BroadcastReceiver {
-    
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction()) ||
-            Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction()) ||
-            Intent.ACTION_PACKAGE_REPLACED.equals(intent.getAction())) {
-            
-            // Initialize LogUtils on boot
-            LogUtils logUtils = LogUtils.getInstance(context);
-            logUtils.info("LogBootReceiver", "System boot completed - LogUtils initialized");
-            
-            // Start cleanup service
-            Intent serviceIntent = new Intent(context, LogCleanupService.class);
-            context.startService(serviceIntent);
-        }
-    }
-}
-==== END FILE: Axiom/app/src/main/java/com/axiomloader/utils/LogBootReceiver.java ====
-
-==== BEGIN FILE: Axiom/app/src/main/java/com/axiomloader/utils/LogCleanupService.java ====
-package com.axiomloader.utils;
-
-import android.app.Service;
-import android.content.Intent;
-import android.os.IBinder;
-import androidx.annotation.Nullable;
-
-public class LogCleanupService extends Service {
-    
-    private LogUtils logUtils;
-    
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        logUtils = LogUtils.getInstance(this);
-    }
-    
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (logUtils != null) {
-            logUtils.info("LogCleanupService", "Log cleanup service started");
-            
-            // Perform cleanup in background thread
-            new Thread(() -> {
-                try {
-                    // This will trigger the cleanup process
-                    logUtils.info("LogCleanupService", "Performing background log maintenance");
-                    
-                    // Stop service after cleanup
-                    stopSelf();
-                } catch (Exception e) {
-                    logUtils.error("LogCleanupService", "Error during cleanup", e);
-                    stopSelf();
-                }
-            }).start();
-        }
-        
-        return START_NOT_STICKY;
-    }
-    
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-    
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (logUtils != null) {
-            logUtils.info("LogCleanupService", "Log cleanup service destroyed");
-        }
-    }
-}
-==== END FILE: Axiom/app/src/main/java/com/axiomloader/utils/LogCleanupService.java ====
-
-==== BEGIN FILE: Axiom/app/src/main/java/com/axiomloader/utils/LogUtils.java ====
-package com.axiomloader.utils;
-
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
+import android.os.StatFs;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 import android.util.Log;
-
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.appender.FileAppender;
-import org.apache.logging.log4j.core.appender.RollingFileAppender;
-import org.apache.logging.log4j.core.config.Configuration;
-import org.apache.logging.log4j.core.config.ConfigurationFactory;
-import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
-import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.LoggerComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import org.apache.commons.io.FileUtils;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.lang3.StringUtils;
+import timber.log.Timber;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.security.KeyStore;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import java.util.zip.GZIPOutputStream;
+import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Advanced Log4j2-powered logging utility for Axiom Loader
- * 
- * Features:
- * 1. Multi-level logging (TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
- * 2. Rolling file appenders with size-based rotation
- * 3. Automatic log compression and archival
- * 4. Real-time log filtering and searching
- * 5. Performance metrics and statistics
- * 6. Thread-safe operations with concurrent logging
- * 7. Memory management with configurable buffer sizes
- * 8. Log export in multiple formats (TXT, JSON, XML, CSV, HTML)
- * 9. Automatic log cleanup and retention policies
- * 10. Custom log formatters with timestamps and thread info
+ * LogUtils - Advanced Timber-based Logging System
+ * Features 20+ sophisticated offline logging capabilities
+ * Total: 1000+ lines of code
+ *
+ * FEATURES:
+ * 1. Multi-level logging (VERBOSE, DEBUG, INFO, WARN, ERROR, WTF)
+ * 2. File-based logging with rotation
+ * 3. Log compression (GZIP)
+ * 4. Log encryption (AES-256)
+ * 5. Performance monitoring
+ * 6. Memory usage tracking
+ * 7. CPU usage monitoring (Removed due to API limitations and inefficiency)
+ * 8. Battery level monitoring
+ * 9. Network status tracking
+ * 10. Storage space monitoring
+ * 11. Crash detection and logging
+ * 12. Stack trace analysis
+ * 13. Thread information logging
+ * 14. Custom log formatting
+ * 15. Log filtering and searching
+ * 16. Log export functionality
+ * 17. Auto-cleanup of old logs
+ * 18. Log statistics and analytics
+ * 19. Custom log tags management
+ * 20. Real-time log monitoring
+ * 21. Log visualization helpers
+ * 22. Device information logging
+ * 23. App lifecycle logging
+ * 24. Network request logging
+ * 25. Database operation logging
  */
 public class LogUtils {
-    
+
     // Constants
     private static final String TAG = "LogUtils";
-    private static final String LOG_DIR_NAME = "axiom_logs";
-    private static final String LOG_FILE_PREFIX = "axiom";
+    private static final String LOG_DIR = "axiom_logs";
+    private static final String PREFS_NAME = "axiom_log_prefs";
+    private static final String LOG_FILE_PREFIX = "axiom_log_";
     private static final String LOG_FILE_EXTENSION = ".log";
-    private static final String ARCHIVE_EXTENSION = ".zip";
-    private static final String PREFS_NAME = "log_utils_prefs";
-    
-    // Configuration Constants
-    private static final long DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    private static final int DEFAULT_MAX_BACKUP_FILES = 10;
-    private static final int DEFAULT_LOG_RETENTION_DAYS = 30;
-    private static final int DEFAULT_BUFFER_SIZE = 8192;
-    private static final long CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
-    private static final long STATS_UPDATE_INTERVAL_MS = 60 * 1000; // 1 minute
-    
+    private static final String COMPRESSED_EXTENSION = ".gz";
+    private static final String ENCRYPTED_EXTENSION = ".enc";
+    private static final int MAX_LOG_FILES = 10;
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+    private static final String FILE_DATE_FORMAT = "yyyyMMdd_HHmmss";
+    private static final String ENCRYPTION_ALGORITHM = "AES";
+    private static final String ENCRYPTION_TRANSFORMATION_GCM = "AES/GCM/NoPadding";
+    private static final String ENCRYPTION_KEY_ALIAS = "axiom_log_key";
+    private static final int GCM_IV_LENGTH = 12; // 12 bytes for AES/GCM
+
     // Singleton instance
-    private static volatile LogUtils instance;
-    
+    private static LogUtils instance;
+    private static Context applicationContext;
+
     // Core components
-    private Context context;
-    private Logger mainLogger;
-    private LoggerContext loggerContext;
-    private Configuration loggerConfig;
-    private SharedPreferences preferences;
-    
-    // File management
-    private File logDirectory;
-    private File currentLogFile;
-    private AtomicLong currentFileSize = new AtomicLong(0);
-    
-    // Threading
-    private ExecutorService logExecutor;
-    private ScheduledExecutorService scheduledExecutor;
-    private Handler mainHandler;
-    
+    private final ExecutorService executorService;
+    private final Handler mainHandler;
+    private final SharedPreferences preferences;
+    private final SimpleDateFormat dateFormat;
+    private final SimpleDateFormat fileDateFormat;
+    private final Gson gson;
+    private final AtomicInteger logCounter;
+
     // Configuration
-    private long maxFileSize = DEFAULT_MAX_FILE_SIZE;
-    private int maxBackupFiles = DEFAULT_MAX_BACKUP_FILES;
-    private int logRetentionDays = DEFAULT_LOG_RETENTION_DAYS;
-    private int bufferSize = DEFAULT_BUFFER_SIZE;
-    private Level logLevel = Level.DEBUG;
-    private boolean compressionEnabled = true;
-    private boolean realTimeLoggingEnabled = true;
-    
-    // Statistics and monitoring
-    private final Map<String, AtomicLong> logCounters = new ConcurrentHashMap<>();
-    private final Map<String, Long> logTimestamps = new ConcurrentHashMap<>();
-    private final Set<String> threadNames = Collections.synchronizedSet(new HashSet<>());
-    private final Set<String> loggerNames = Collections.synchronizedSet(new HashSet<>());
-    private final List<String> recentLogs = Collections.synchronizedList(new ArrayList<>());
-    
-    // Performance tracking
-    private long initializationTime;
-    private AtomicLong totalLogCount = new AtomicLong(0);
-    private AtomicLong totalBytesLogged = new AtomicLong(0);
-    private AtomicLong sessionStartTime = new AtomicLong(System.currentTimeMillis());
-    
-    // Advanced features
-    private final Map<String, String> logMarkers = new ConcurrentHashMap<>();
-    private final List<LogAnalysisPattern> analysisPatterns = new ArrayList<>();
-    private final ObjectMapper jsonMapper = new ObjectMapper();
-    private boolean integrityCheckEnabled = true;
-    private String sessionId;
-    
+    private boolean fileLoggingEnabled = true;
+    private boolean compressionEnabled = false;
+    private boolean encryptionEnabled = false;
+    private boolean crashReportingEnabled = true;
+    private boolean performanceMonitoringEnabled = true;
+    private boolean autoCleanupEnabled = true;
+    private boolean coloredLogsEnabled = true;
+    private boolean threadInfoEnabled = true;
+    private boolean stackTraceEnabled = false;
+    private int maxLogFiles = MAX_LOG_FILES;
+    private long maxFileSize = MAX_FILE_SIZE;
+
+    // Monitoring data
+    private final Map<String, Long> performanceMetrics;
+    private final Map<String, Integer> logCounts;
+    private final List<LogEntry> recentLogs;
+    private final Set<String> activeTags;
+    private long lastCleanupTime;
+    private SecretKey encryptionKey;
+
+    // Current log file
+    private File currentLogFile;
+    private BufferedWriter currentLogWriter;
+    private long currentFileSize;
+
     /**
-     * Inner class for log analysis patterns
+     * LogEntry class to represent individual log entries
      */
-    public static class LogAnalysisPattern {
-        public String name;
-        public Pattern pattern;
-        public String category;
-        public int priority;
-        
-        public LogAnalysisPattern(String name, String regex, String category, int priority) {
-            this.name = name;
-            this.pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-            this.category = category;
-            this.priority = priority;
+    public static class LogEntry {
+        public long timestamp;
+        public String level;
+        public String tag;
+        public String message;
+        public String threadName;
+        public String className;
+        public String methodName;
+        public int lineNumber;
+        public Map<String, Object> metadata;
+
+        public LogEntry(String level, String tag, String message) {
+            this.timestamp = System.currentTimeMillis();
+            this.level = level;
+            this.tag = tag;
+            this.message = message;
+            this.threadName = Thread.currentThread().getName();
+            this.metadata = new HashMap<>();
+
+            // Extract caller information
+            StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+            if (stack.length > 4) {
+                StackTraceElement caller = stack[4];
+                this.className = caller.getClassName();
+                this.methodName = caller.getMethodName();
+                this.lineNumber = caller.getLineNumber();
+            }
         }
     }
-    
+
+    /**
+     * LogLevel enumeration
+     */
+    public enum LogLevel {
+        VERBOSE(2, "V", "VERBOSE"),
+        DEBUG(3, "D", "DEBUG"),
+        INFO(4, "I", "INFO"),
+        WARN(5, "W", "WARN"),
+        ERROR(6, "E", "ERROR"),
+        WTF(7, "A", "ASSERT");
+
+        public final int priority;
+        public final String shortName;
+        public final String fullName;
+
+        LogLevel(int priority, String shortName, String fullName) {
+            this.priority = priority;
+            this.shortName = shortName;
+            this.fullName = fullName;
+        }
+    }
+
+    /**
+     * LogFormat enumeration for different formatting styles
+     */
+    public enum LogFormat {
+        SIMPLE,
+        DETAILED,
+        JSON,
+        XML,
+        CSV
+    }
+
     /**
      * Private constructor for singleton pattern
      */
     private LogUtils(Context context) {
-        this.context = context.getApplicationContext();
-        this.sessionId = generateSessionId();
-        this.initializationTime = System.currentTimeMillis();
-        
-        initializeComponents();
+        applicationContext = context.getApplicationContext();
+        executorService = Executors.newSingleThreadExecutor();
+        mainHandler = new Handler(Looper.getMainLooper());
+        preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        dateFormat = new SimpleDateFormat(DATE_FORMAT, Locale.getDefault());
+        fileDateFormat = new SimpleDateFormat(FILE_DATE_FORMAT, Locale.getDefault());
+        gson = new GsonBuilder().setPrettyPrinting().create();
+        logCounter = new AtomicInteger(0);
+
+        performanceMetrics = new ConcurrentHashMap<>();
+        logCounts = new ConcurrentHashMap<>();
+        recentLogs = Collections.synchronizedList(new ArrayList<>());
+        activeTags = Collections.synchronizedSet(new HashSet<>());
+
+        loadPreferences();
+        initializeEncryption();
         initializeLogging();
-        initializeStatistics();
-        scheduleMaintenanceTasks();
-        initializeAnalysisPatterns();
-        
-        info(TAG, "LogUtils initialized successfully with session ID: " + sessionId);
+        setupCustomTimberTree();
+
+        // Start performance monitoring
+        if (performanceMonitoringEnabled) {
+            startPerformanceMonitoring();
+        }
+
+        // Schedule cleanup if enabled
+        if (autoCleanupEnabled) {
+            scheduleLogCleanup();
+        }
+
+        // Log initialization
+        logInfo(TAG, "LogUtils initialized with " + getFeatureCount() + " features");
+        logDeviceInfo();
     }
-    
+
     /**
-     * Get singleton instance
+     * Initialize the LogUtils singleton
      */
-    public static LogUtils getInstance(Context context) {
+    public static synchronized void initialize(Context context) {
         if (instance == null) {
-            synchronized (LogUtils.class) {
-                if (instance == null) {
-                    instance = new LogUtils(context);
-                }
-            }
+            instance = new LogUtils(context);
+        }
+    }
+
+    /**
+     * Get the singleton instance
+     */
+    public static LogUtils getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("LogUtils not initialized. Call initialize(Context) first.");
         }
         return instance;
     }
-    
+
     /**
-     * Initialize core components
+     * Load preferences from SharedPreferences
      */
-    private void initializeComponents() {
-        preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        logExecutor = Executors.newSingleThreadExecutor(r -> {
-            Thread t = new Thread(r, "LogUtils-Worker");
-            t.setDaemon(true);
-            return t;
-        });
-        scheduledExecutor = Executors.newScheduledThreadPool(2, r -> {
-            Thread t = new Thread(r, "LogUtils-Scheduled");
-            t.setDaemon(true);
-            return t;
-        });
-        mainHandler = new Handler(Looper.getMainLooper());
-        
-        loadConfiguration();
-        setupLogDirectory();
+    private void loadPreferences() {
+        fileLoggingEnabled = preferences.getBoolean("file_logging_enabled", true);
+        compressionEnabled = preferences.getBoolean("compression_enabled", false);
+        encryptionEnabled = preferences.getBoolean("encryption_enabled", false);
+        crashReportingEnabled = preferences.getBoolean("crash_reporting_enabled", true);
+        performanceMonitoringEnabled = preferences.getBoolean("performance_monitoring_enabled", true);
+        autoCleanupEnabled = preferences.getBoolean("auto_cleanup_enabled", true);
+        coloredLogsEnabled = preferences.getBoolean("colored_logs_enabled", true);
+        threadInfoEnabled = preferences.getBoolean("thread_info_enabled", true);
+        stackTraceEnabled = preferences.getBoolean("stack_trace_enabled", false);
+        maxLogFiles = preferences.getInt("max_log_files", MAX_LOG_FILES);
+        maxFileSize = preferences.getLong("max_file_size", MAX_FILE_SIZE);
     }
-    
+
     /**
-     * Load configuration from SharedPreferences
+     * Save preferences to SharedPreferences
      */
-    private void loadConfiguration() {
-        maxFileSize = preferences.getLong("max_file_size", DEFAULT_MAX_FILE_SIZE);
-        maxBackupFiles = preferences.getInt("max_backup_files", DEFAULT_MAX_BACKUP_FILES);
-        logRetentionDays = preferences.getInt("log_retention_days", DEFAULT_LOG_RETENTION_DAYS);
-        bufferSize = preferences.getInt("buffer_size", DEFAULT_BUFFER_SIZE);
-        compressionEnabled = preferences.getBoolean("compression_enabled", true);
-        realTimeLoggingEnabled = preferences.getBoolean("real_time_logging", true);
-        integrityCheckEnabled = preferences.getBoolean("integrity_check", true);
-        
-        String levelStr = preferences.getString("log_level", "DEBUG");
-        logLevel = Level.valueOf(levelStr);
+    private void savePreferences() {
+        preferences.edit()
+            .putBoolean("file_logging_enabled", fileLoggingEnabled)
+            .putBoolean("compression_enabled", compressionEnabled)
+            .putBoolean("encryption_enabled", encryptionEnabled)
+            .putBoolean("crash_reporting_enabled", crashReportingEnabled)
+            .putBoolean("performance_monitoring_enabled", performanceMonitoringEnabled)
+            .putBoolean("auto_cleanup_enabled", autoCleanupEnabled)
+            .putBoolean("colored_logs_enabled", coloredLogsEnabled)
+            .putBoolean("thread_info_enabled", threadInfoEnabled)
+            .putBoolean("stack_trace_enabled", stackTraceEnabled)
+            .putInt("max_log_files", maxLogFiles)
+            .putLong("max_file_size", maxFileSize)
+            .apply();
     }
-    
+
     /**
-     * Setup log directory and current log file
+     * Initialize encryption key using Android Keystore
      */
-    private void setupLogDirectory() {
-        try {
-            File externalFilesDir = context.getExternalFilesDir(null);
-            if (externalFilesDir != null) {
-                logDirectory = new File(externalFilesDir, LOG_DIR_NAME);
-            } else {
-                logDirectory = new File(context.getFilesDir(), LOG_DIR_NAME);
-            }
-            
-            if (!logDirectory.exists()) {
-                boolean created = logDirectory.mkdirs();
-                if (!created) {
-                    Log.e(TAG, "Failed to create log directory: " + logDirectory.getAbsolutePath());
-                }
-            }
-            
-            String logFileName = LOG_FILE_PREFIX + "_" + 
-                new SimpleDateFormat("yyyyMMdd", Locale.US).format(new Date()) + 
-                LOG_FILE_EXTENSION;
-            currentLogFile = new File(logDirectory, logFileName);
-            
-            if (currentLogFile.exists()) {
-                currentFileSize.set(currentLogFile.length());
-            }
-            
-        } catch (Exception e) {
-            Log.e(TAG, "Error setting up log directory", e);
-        }
-    }
-    
-    /**
-     * Initialize Log4j2 logging system
-     */
-    private void initializeLogging() {
-        try {
-            // Create configuration builder
-            ConfigurationBuilder<BuiltConfiguration> builder = 
-                ConfigurationFactory.newConfigurationBuilder();
-            
-            // Configure root logger level
-            builder.setStatusLevel(Level.ERROR);
-            builder.setConfigurationName("AxiomLogConfig");
-            
-            // Create pattern layout with cleaner formatting
-            LayoutComponentBuilder layoutBuilder = builder.newLayout("PatternLayout")
-                    .addAttribute("pattern", 
-                        "%d{HH:mm:ss.SSS} [%level] %logger{20} - %msg%n");
-            
-            // Create rolling file appender
-            AppenderComponentBuilder appenderBuilder = builder.newAppender("RollingFile", "RollingFile")
-                    .addAttribute("fileName", currentLogFile.getAbsolutePath())
-                    .addAttribute("filePattern", 
-                        logDirectory.getAbsolutePath() + "/" + LOG_FILE_PREFIX + "-%i" + LOG_FILE_EXTENSION)
-                    .add(layoutBuilder)
-                    .addComponent(builder.newComponent("Policies")
-                        .addComponent(builder.newComponent("SizeBasedTriggeringPolicy")
-                            .addAttribute("size", maxFileSize + "B"))
-                        .addComponent(builder.newComponent("TimeBasedTriggeringPolicy")
-                            .addAttribute("interval", "1")
-                            .addAttribute("modulate", true)))
-                    .addComponent(builder.newComponent("DefaultRolloverStrategy")
-                        .addAttribute("max", String.valueOf(maxBackupFiles)));
-            
-            builder.add(appenderBuilder);
-            
-            // Create console appender for debugging with cleaner format
-            AppenderComponentBuilder consoleBuilder = builder.newAppender("Console", "CONSOLE")
-                    .addAttribute("target", "SYSTEM_OUT")
-                    .add(layoutBuilder);
-            
-            builder.add(consoleBuilder);
-            
-            // Create root logger
-            RootLoggerComponentBuilder rootLogger = builder.newRootLogger(logLevel)
-                    .add(builder.newAppenderRef("RollingFile"))
-                    .add(builder.newAppenderRef("Console"));
-            
-            builder.add(rootLogger);
-            
-            // Build and apply configuration
-            loggerConfig = builder.build();
-            loggerContext = (LoggerContext) LogManager.getContext(false);
-            loggerContext.setConfiguration(loggerConfig);
-            loggerContext.updateLoggers();
-            
-            // Get main logger
-            mainLogger = LogManager.getLogger("AxiomLogger");
-            
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to initialize Log4j2", e);
-            // Fallback to Android Log
-            fallbackToAndroidLog();
-        }
-    }
-    
-    /**
-     * Initialize statistics tracking
-     */
-    private void initializeStatistics() {
-        // Initialize counters for each log level
-        for (Level level : new Level[]{Level.TRACE, Level.DEBUG, Level.INFO, Level.WARN, Level.ERROR, Level.FATAL}) {
-            logCounters.put(level.name(), new AtomicLong(0));
-        }
-        
-        // Additional statistics
-        logCounters.put("TOTAL", new AtomicLong(0));
-        logCounters.put("ERRORS_TODAY", new AtomicLong(0));
-        logCounters.put("CRASHES", new AtomicLong(0));
-        logCounters.put("PERFORMANCE_ISSUES", new AtomicLong(0));
-    }
-    
-    /**
-     * Schedule maintenance tasks
-     */
-    private void scheduleMaintenanceTasks() {
-        // Schedule log cleanup task
-        scheduledExecutor.scheduleAtFixedRate(this::performLogCleanup, 
-                CLEANUP_INTERVAL_MS, CLEANUP_INTERVAL_MS, TimeUnit.MILLISECONDS);
-        
-        // Schedule statistics update task
-        scheduledExecutor.scheduleAtFixedRate(this::updateStatistics,
-                STATS_UPDATE_INTERVAL_MS, STATS_UPDATE_INTERVAL_MS, TimeUnit.MILLISECONDS);
-        
-        // Schedule compression task
-        if (compressionEnabled) {
-            scheduledExecutor.scheduleAtFixedRate(this::compressOldLogs,
-                    6 * 60 * 60 * 1000, 6 * 60 * 60 * 1000, TimeUnit.MILLISECONDS); // Every 6 hours
-        }
-        
-        // Schedule integrity check task
-        if (integrityCheckEnabled) {
-            scheduledExecutor.scheduleAtFixedRate(this::performIntegrityCheck,
-                    2 * 60 * 60 * 1000, 2 * 60 * 60 * 1000, TimeUnit.MILLISECONDS); // Every 2 hours
-        }
-    }
-    
-    /**
-     * Initialize analysis patterns for log categorization
-     */
-    private void initializeAnalysisPatterns() {
-        // Error patterns
-        analysisPatterns.add(new LogAnalysisPattern("OutOfMemoryError", 
-                "OutOfMemoryError|OOM|memory.*leak", "MEMORY", 1));
-        analysisPatterns.add(new LogAnalysisPattern("NetworkError", 
-                "IOException|ConnectException|timeout|network", "NETWORK", 2));
-        analysisPatterns.add(new LogAnalysisPattern("SecurityViolation", 
-                "SecurityException|permission.*denied|unauthorized", "SECURITY", 1));
-        analysisPatterns.add(new LogAnalysisPattern("DatabaseError", 
-                "SQLException|database.*error|cursor.*closed", "DATABASE", 3));
-        analysisPatterns.add(new LogAnalysisPattern("UIError", 
-                "ViewRootImpl|IllegalStateException.*fragment", "UI", 4));
-        
-        // Performance patterns
-        analysisPatterns.add(new LogAnalysisPattern("SlowOperation", 
-                "slow|performance|took.*[0-9]+.*ms", "PERFORMANCE", 3));
-        analysisPatterns.add(new LogAnalysisPattern("ANR", 
-                "ANR|Application Not Responding|main.*thread.*blocked", "PERFORMANCE", 1));
-        
-        // System patterns
-        analysisPatterns.add(new LogAnalysisPattern("LowStorage", 
-                "storage.*low|disk.*full|insufficient.*space", "SYSTEM", 2));
-        analysisPatterns.add(new LogAnalysisPattern("BatteryOptimization", 
-                "battery.*optimization|doze.*mode|standby", "POWER", 3));
-        
-        // Custom application patterns
-        analysisPatterns.add(new LogAnalysisPattern("AxiomLoad", 
-                "loading|loader|axiom.*start", "APPLICATION", 4));
-        analysisPatterns.add(new LogAnalysisPattern("UserAction", 
-                "user.*click|button.*press|gesture", "USER_INTERACTION", 5));
-    }
-    
-    /**
-     * Generate unique session ID
-     */
-    private String generateSessionId() {
-        return String.format(Locale.US, "AX_%d_%s", 
-                System.currentTimeMillis(),
-                Build.MODEL.replaceAll("\\s+", "").substring(0, 
-                Math.min(4, Build.MODEL.length())));
-    }
-    
-    /**
-     * Fallback to Android logging system
-     */
-    private void fallbackToAndroidLog() {
-        Log.w(TAG, "Falling back to Android Log system");
-        // Set flag to use Android Log instead of Log4j2
-        // Implementation would use Android Log.d, Log.i, etc.
-    }
-    
-    // ========== PUBLIC LOGGING METHODS ==========
-    
-    /**
-     * Log TRACE level message
-     */
-    public void trace(String logger, String message) {
-        logMessage(Level.TRACE, logger, message, null);
-    }
-    
-    public void trace(String logger, String message, Throwable throwable) {
-        logMessage(Level.TRACE, logger, message, throwable);
-    }
-    
-    /**
-     * Log DEBUG level message
-     */
-    public void debug(String logger, String message) {
-        logMessage(Level.DEBUG, logger, message, null);
-    }
-    
-    public void debug(String logger, String message, Throwable throwable) {
-        logMessage(Level.DEBUG, logger, message, throwable);
-    }
-    
-    /**
-     * Log INFO level message
-     */
-    public void info(String logger, String message) {
-        logMessage(Level.INFO, logger, message, null);
-    }
-    
-    public void info(String logger, String message, Throwable throwable) {
-        logMessage(Level.INFO, logger, message, throwable);
-    }
-    
-    /**
-     * Log WARN level message
-     */
-    public void warn(String logger, String message) {
-        logMessage(Level.WARN, logger, message, null);
-    }
-    
-    public void warn(String logger, String message, Throwable throwable) {
-        logMessage(Level.WARN, logger, message, throwable);
-    }
-    
-    /**
-     * Log ERROR level message
-     */
-    public void error(String logger, String message) {
-        logMessage(Level.ERROR, logger, message, null);
-    }
-    
-    public void error(String logger, String message, Throwable throwable) {
-        logMessage(Level.ERROR, logger, message, throwable);
-    }
-    
-    /**
-     * Log FATAL level message
-     */
-    public void fatal(String logger, String message) {
-        logMessage(Level.FATAL, logger, message, null);
-    }
-    
-    public void fatal(String logger, String message, Throwable throwable) {
-        logMessage(Level.FATAL, logger, message, throwable);
-    }
-    
-   /**
-     * Core logging method - IMPROVED FOR CLEANER OUTPUT
-     */
-    private void logMessage(Level level, String loggerName, String message, Throwable throwable) {
-        if (!realTimeLoggingEnabled || level.intLevel() > logLevel.intLevel()) {
+    private void initializeEncryption() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            logWarning(TAG, "Android Keystore is not fully supported on this API level. Encryption disabled.");
+            encryptionEnabled = false;
             return;
         }
-        
-        logExecutor.execute(() -> {
+
+        try {
+            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+
+            if (!keyStore.containsAlias(ENCRYPTION_KEY_ALIAS)) {
+                KeyGenerator keyGen = KeyGenerator.getInstance(
+                        KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+                keyGen.init(new KeyGenParameterSpec.Builder(
+                        ENCRYPTION_KEY_ALIAS,
+                        KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                        .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                        .setKeySize(256)
+                        .build());
+                keyGen.generateKey();
+            }
+
+            encryptionKey = (SecretKey) keyStore.getKey(ENCRYPTION_KEY_ALIAS, null);
+
+        } catch (Exception e) {
+            logError(TAG, "Failed to initialize encryption with Keystore", e);
+            encryptionEnabled = false;
+        }
+    }
+
+    /**
+     * Initialize logging system
+     */
+    private void initializeLogging() {
+        if (fileLoggingEnabled) {
+            createLogDirectory();
+            rotateLogFileIfNeeded();
+        }
+
+        // Setup uncaught exception handler
+        if (crashReportingEnabled) {
+            Thread.setDefaultUncaughtExceptionHandler(new CustomUncaughtExceptionHandler());
+        }
+    }
+
+    /**
+     * Setup custom Timber tree
+     */
+    private void setupCustomTimberTree() {
+        Timber.plant(new CustomTimberTree());
+    }
+
+    /**
+     * Custom Timber Tree implementation
+     */
+    private class CustomTimberTree extends Timber.DebugTree {
+        @Override
+        protected void log(int priority, String tag, @NonNull String message, Throwable t) {
+            super.log(priority, tag, message, t);
+
+            LogLevel level = priorityToLogLevel(priority);
+            LogEntry entry = new LogEntry(level.fullName, tag, message);
+
+            // Add exception info if present
+            if (t != null) {
+                entry.metadata.put("exception", getStackTraceString(t));
+            }
+
+            // Add performance metrics
+            addPerformanceMetrics(entry);
+
+            // Store log entry
+            storeLogEntry(entry);
+
+            // Update counters
+            updateLogCounters(level, tag);
+
+            // Write to file if enabled
+            if (fileLoggingEnabled) {
+                writeToFile(entry);
+            }
+        }
+
+        @Override
+        protected String createStackElementTag(@NonNull StackTraceElement element) {
+            if (stackTraceEnabled) {
+                return String.format("(%s:%s)#%s",
+                    element.getFileName(),
+                    element.getLineNumber(),
+                    element.getMethodName());
+            } else {
+                return super.createStackElementTag(element);
+            }
+        }
+    }
+
+    /**
+     * Convert Android log priority to LogLevel
+     */
+    private LogLevel priorityToLogLevel(int priority) {
+        switch (priority) {
+            case Log.VERBOSE: return LogLevel.VERBOSE;
+            case Log.DEBUG: return LogLevel.DEBUG;
+            case Log.INFO: return LogLevel.INFO;
+            case Log.WARN: return LogLevel.WARN;
+            case Log.ERROR: return LogLevel.ERROR;
+            case Log.ASSERT: return LogLevel.WTF;
+            default: return LogLevel.DEBUG;
+        }
+    }
+
+    /**
+     * Add performance metrics to log entry
+     */
+    private void addPerformanceMetrics(LogEntry entry) {
+        if (performanceMonitoringEnabled) {
+            entry.metadata.put("memory_usage", getMemoryUsage());
+            entry.metadata.put("battery_level", getBatteryLevel());
+            entry.metadata.put("available_storage", getAvailableStorage());
+            entry.metadata.put("network_status", getNetworkStatus());
+        }
+    }
+
+    /**
+     * Store log entry in memory
+     */
+    private void storeLogEntry(LogEntry entry) {
+        synchronized (recentLogs) {
+            recentLogs.add(entry);
+            activeTags.add(entry.tag);
+
+            // Keep only recent logs (last 1000)
+            if (recentLogs.size() > 1000) {
+                recentLogs.remove(0);
+            }
+        }
+    }
+
+    /**
+     * Update log counters
+     */
+    private void updateLogCounters(LogLevel level, String tag) {
+        String key = level.fullName + "_" + tag;
+        logCounts.put(key, logCounts.getOrDefault(key, 0) + 1);
+        logCounter.incrementAndGet();
+    }
+
+/**
+     * Write log entry to file
+     */
+    private void writeToFile(LogEntry entry) {
+        executorService.execute(() -> {
             try {
-                // Track statistics
-                updateLogStatistics(level, loggerName, message);
-                
-                // Get logger instance
-                Logger logger = LogManager.getLogger(loggerName);
-                
-                // Add context information - CLEANED UP
-                String threadName = Thread.currentThread().getName();
-                threadNames.add(threadName);
-                loggerNames.add(loggerName);
-                
-                // Enhanced message with minimal context - SIMPLIFIED
-                String enhancedMessage = enhanceMessageClean(message, threadName);
-                
-                // Log with Log4j2
-                if (throwable != null) {
-                    logger.log(level, enhancedMessage, throwable);
-                } else {
-                    logger.log(level, enhancedMessage);
+                ensureLogFileExists();
+
+                String formattedLog = formatLogEntry(entry, LogFormat.DETAILED);
+
+                synchronized (this) {
+                    if (currentLogWriter != null) {
+                        currentLogWriter.write(formattedLog);
+                        currentLogWriter.newLine();
+                        currentLogWriter.flush();
+                        currentFileSize += formattedLog.getBytes(StandardCharsets.UTF_8).length + 1;
+
+                        // Check if file size exceeds limit
+                        if (currentFileSize >= maxFileSize) {
+                            rotateLogFile();
+                        }
+                    }
                 }
-                
-                // Store recent logs for quick access - FORMATTED
-                storeRecentLogClean(level, loggerName, enhancedMessage, throwable);
-                
-                // Perform pattern analysis
-                analyzeLogPattern(level, enhancedMessage);
-                
-                // Check for rotation if needed
-                checkLogRotation();
-                
-            } catch (Exception e) {
-                Log.e(TAG, "Error in logMessage", e);
+            } catch (IOException e) {
+                logError(TAG, "Failed to write to log file", e);
             }
         });
     }
 
     /**
-     * IMPROVED: Enhance message with minimal context for cleaner display
+     * Format log entry based on specified format
      */
-    private String enhanceMessageClean(String message, String threadName) {
-        StringBuilder enhanced = new StringBuilder();
-        
-        // Only add thread name if it's not the main logging thread and is relevant
-        if (!threadName.equals("LogUtils-Worker") && 
-            !threadName.equals("LogUtils-Scheduled") &&
-            !threadName.equals("main")) {
-            enhanced.append("[").append(threadName).append("] ");
-        }
-        
-        enhanced.append(message);
-        
-        // Only add memory info for actual critical errors
-        if (message.toLowerCase().contains("outofmemoryerror") || 
-            message.toLowerCase().contains("fatal") ||
-            (message.toLowerCase().contains("error") && message.toLowerCase().contains("memory"))) {
-            Runtime runtime = Runtime.getRuntime();
-            long usedMemory = runtime.totalMemory() - runtime.freeMemory();
-            enhanced.append(" [Memory: ").append(usedMemory / 1024 / 1024).append("MB]");
-        }
-        
-        return enhanced.toString();
-    }
-    
-    /**
-     * Update log statistics
-     */
-    private void updateLogStatistics(Level level, String loggerName, String message) {
-        logCounters.get(level.name()).incrementAndGet();
-        logCounters.get("TOTAL").incrementAndGet();
-        totalLogCount.incrementAndGet();
-        totalBytesLogged.addAndGet(message.length());
-        
-        logTimestamps.put(level.name() + "_LAST", System.currentTimeMillis());
-        
-        // Track specific error types
-        if (level.intLevel() <= Level.ERROR.intLevel()) {
-            if (message.toLowerCase().contains("crash")) {
-                logCounters.get("CRASHES").incrementAndGet();
-            }
-            if (message.toLowerCase().contains("slow") || message.toLowerCase().contains("performance")) {
-                logCounters.get("PERFORMANCE_ISSUES").incrementAndGet();
-            }
+    private String formatLogEntry(LogEntry entry, LogFormat format) {
+        switch (format) {
+            case JSON:
+                return gson.toJson(entry);
+            case XML:
+                return formatAsXml(entry);
+            case CSV:
+                return formatAsCsv(entry);
+            case DETAILED:
+                return formatDetailed(entry);
+            case SIMPLE:
+            default:
+                return formatSimple(entry);
         }
     }
-    
+
     /**
-     * IMPROVED: Store recent logs with clean formatting
+     * Format log entry as detailed string
      */
-    private void storeRecentLogClean(Level level, String loggerName, String message, Throwable throwable) {
-        String timestamp = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US).format(new Date());
-        
-        // Create clean log entry format
-        String logEntry = String.format("[%s] [%s] %s - %s", 
-                timestamp, level.name(), loggerName.replace("com.axiomloader.", ""), message);
-        
-        if (throwable != null) {
-            logEntry += " | " + throwable.getClass().getSimpleName() + ": " + throwable.getMessage();
+    private String formatDetailed(LogEntry entry) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(dateFormat.format(new Date(entry.timestamp)));
+        sb.append(" [").append(entry.level).append("]");
+
+        if (threadInfoEnabled) {
+            sb.append(" [").append(entry.threadName).append("]");
         }
-        
-        synchronized (recentLogs) {
-            recentLogs.add(logEntry);
-            // Keep only last 500 entries in memory for better performance
-            if (recentLogs.size() > 500) {
-                recentLogs.remove(0);
-            }
+
+        sb.append(" ").append(entry.tag).append(": ").append(entry.message);
+
+        if (entry.className != null && entry.methodName != null) {
+            sb.append(" (").append(getSimpleClassName(entry.className))
+              .append(".").append(entry.methodName)
+              .append(":").append(entry.lineNumber).append(")");
         }
+
+        if (!entry.metadata.isEmpty()) {
+            sb.append(" | Metadata: ").append(gson.toJson(entry.metadata));
+        }
+
+        return sb.toString();
     }
-    
+
     /**
-     * Analyze log patterns for categorization
+     * Format log entry as simple string
      */
-    private void analyzeLogPattern(Level level, String message) {
-        for (LogAnalysisPattern pattern : analysisPatterns) {
-            if (pattern.pattern.matcher(message).find()) {
-                String key = "PATTERN_" + pattern.name;
-                logCounters.computeIfAbsent(key, k -> new AtomicLong(0)).incrementAndGet();
-                
-                // Store pattern match for reporting
-                logMarkers.put(key + "_LAST", 
-                        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()));
-                break; // Only match first pattern to avoid double counting
-            }
-        }
+    private String formatSimple(LogEntry entry) {
+        return String.format("%s %s/%s: %s",
+            dateFormat.format(new Date(entry.timestamp)),
+            entry.level.charAt(0),
+            entry.tag,
+            entry.message);
     }
-    
+
     /**
-     * Check if log rotation is needed
+     * Format log entry as XML
      */
-    private void checkLogRotation() {
-        if (currentLogFile.length() > maxFileSize) {
-            rotateLogFile();
-        }
+    private String formatAsXml(LogEntry entry) {
+        StringBuilder xml = new StringBuilder();
+        xml.append("<log>");
+        xml.append("<timestamp>").append(entry.timestamp).append("</timestamp>");
+        xml.append("<level>").append(entry.level).append("</level>");
+        xml.append("<tag>").append(escapeXml(entry.tag)).append("</tag>");
+        xml.append("<message>").append(escapeXml(entry.message)).append("</message>");
+        xml.append("<thread>").append(escapeXml(entry.threadName)).append("</thread>");
+        xml.append("<class>").append(escapeXml(entry.className)).append("</class>");
+        xml.append("<method>").append(escapeXml(entry.methodName)).append("</method>");
+        xml.append("<line>").append(entry.lineNumber).append("</line>");
+        xml.append("</log>");
+        return xml.toString();
     }
-    
+
     /**
-     * Rotate log file
+     * Format log entry as CSV
      */
-    private void rotateLogFile() {
-        try {
-            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-            String rotatedFileName = LOG_FILE_PREFIX + "_" + timestamp + LOG_FILE_EXTENSION;
-            File rotatedFile = new File(logDirectory, rotatedFileName);
-            
-            if (currentLogFile.renameTo(rotatedFile)) {
-                currentLogFile = new File(logDirectory, 
-                        LOG_FILE_PREFIX + "_current" + LOG_FILE_EXTENSION);
-                currentFileSize.set(0);
-                
-                info(TAG, "Log file rotated to: " + rotatedFileName);
-                
-                // Compress old log file if enabled
-                if (compressionEnabled) {
-                    compressLogFile(rotatedFile);
-                }
-            }
-        } catch (Exception e) {
-            error(TAG, "Failed to rotate log file", e);
-        }
+    private String formatAsCsv(LogEntry entry) {
+        return String.format("\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\"",
+            entry.timestamp,
+            entry.level,
+            escapeCsv(entry.tag),
+            escapeCsv(entry.message),
+            escapeCsv(entry.threadName),
+            escapeCsv(entry.className),
+            escapeCsv(entry.methodName),
+            entry.lineNumber);
     }
-    
+
     /**
-     * Update statistics periodically
+     * Escape XML special characters
      */
-    private void updateStatistics() {
-        try {
-            // Update file sizes
-            long totalSize = 0;
-            File[] logFiles = logDirectory.listFiles(file -> 
-                    file.getName().startsWith(LOG_FILE_PREFIX) && 
-                    (file.getName().endsWith(LOG_FILE_EXTENSION) || 
-                     file.getName().endsWith(ARCHIVE_EXTENSION)));
-            
-            if (logFiles != null) {
-                for (File file : logFiles) {
-                    totalSize += file.length();
-                }
-            }
-            
-            // Store in preferences for persistence
-            preferences.edit()
-                    .putLong("total_log_size", totalSize)
-                    .putLong("total_log_count", totalLogCount.get())
-                    .putLong("session_start_time", sessionStartTime.get())
-                    .apply();
-                    
-        } catch (Exception e) {
-            error(TAG, "Error updating statistics", e);
-        }
-    }
-    
-    /**
-     * Perform log cleanup based on retention policy
-     */
-    private void performLogCleanup() {
-        try {
-            long cutoffTime = System.currentTimeMillis() - (logRetentionDays * 24 * 60 * 60 * 1000L);
-            
-            File[] logFiles = logDirectory.listFiles(file -> 
-                    file.getName().startsWith(LOG_FILE_PREFIX) && 
-                    file.lastModified() < cutoffTime);
-            
-            if (logFiles != null) {
-                int deletedCount = 0;
-                long deletedSize = 0;
-                
-                for (File file : logFiles) {
-                    deletedSize += file.length();
-                    if (file.delete()) {
-                        deletedCount++;
-                    }
-                }
-                
-                if (deletedCount > 0) {
-                    info(TAG, String.format("Cleaned up %d old log files, freed %d bytes", 
-                            deletedCount, deletedSize));
-                }
-            }
-        } catch (Exception e) {
-            error(TAG, "Error during log cleanup", e);
-        }
-    }
-    
-    /**
-     * Compress old log files
-     */
-    private void compressOldLogs() {
-        try {
-            File[] logFiles = logDirectory.listFiles(file -> 
-                    file.getName().startsWith(LOG_FILE_PREFIX) && 
-                    file.getName().endsWith(LOG_FILE_EXTENSION) &&
-                    !file.equals(currentLogFile) &&
-                    (System.currentTimeMillis() - file.lastModified()) > (24 * 60 * 60 * 1000)); // 1 day old
-            
-            if (logFiles != null) {
-                for (File logFile : logFiles) {
-                    compressLogFile(logFile);
-                }
-            }
-        } catch (Exception e) {
-            error(TAG, "Error compressing old logs", e);
-        }
-    }
-    
-    /**
-     * Compress individual log file
-     */
-    private void compressLogFile(File logFile) {
-        try {
-            String compressedName = logFile.getName().replace(LOG_FILE_EXTENSION, ARCHIVE_EXTENSION);
-            File compressedFile = new File(logDirectory, compressedName);
-            
-            try (ZipOutputStream zos = new ZipOutputStream(
-                    Files.newOutputStream(compressedFile.toPath()))) {
-                
-                ZipEntry entry = new ZipEntry(logFile.getName());
-                zos.putNextEntry(entry);
-                
-                byte[] buffer = Files.readAllBytes(logFile.toPath());
-                zos.write(buffer);
-                zos.closeEntry();
-                
-                // Delete original file after successful compression
-                if (logFile.delete()) {
-                    info(TAG, "Compressed and deleted: " + logFile.getName());
-                }
-            }
-        } catch (Exception e) {
-            error(TAG, "Failed to compress log file: " + logFile.getName(), e);
-        }
-    }
-    
-    /**
-     * Perform integrity check on log files
-     */
-    private void performIntegrityCheck() {
-        try {
-            File[] logFiles = logDirectory.listFiles(file -> 
-                    file.getName().startsWith(LOG_FILE_PREFIX));
-            
-            if (logFiles != null) {
-                for (File file : logFiles) {
-                    if (!file.canRead() || file.length() < 0) {
-                        warn(TAG, "Integrity issue detected in file: " + file.getName());
-                    }
-                }
-            }
-        } catch (Exception e) {
-            error(TAG, "Error during integrity check", e);
-        }
-    }
-    
-    /**
-     * Custom HTML escape method
-     */
-    private String escapeHtml(String text) {
+    private String escapeXml(String text) {
         if (text == null) return "";
         return text.replace("&", "&amp;")
-                   .replace("<", "&lt;")
-                   .replace(">", "&gt;")
-                   .replace("\"", "&quot;")
-                   .replace("'", "&#x27;");
+                  .replace("<", "&lt;")
+                  .replace(">", "&gt;")
+                  .replace("\"", "&quot;")
+                  .replace("'", "&apos;");
     }
-    
-    // ========== PUBLIC UTILITY METHODS ==========
-    
+
     /**
-     * IMPROVED: Get all logs formatted for display with cleaner formatting
+     * Escape CSV special characters
      */
-    public List<String> getAllLogsFormatted() {
-        List<String> allLogs = new ArrayList<>();
-        
-        try {
-            // First add recent in-memory logs (already formatted)
-            synchronized (recentLogs) {
-                allLogs.addAll(new ArrayList<>(recentLogs));
+    private String escapeCsv(String text) {
+        if (text == null) return "";
+        return text.replace("\"", "\"\"");
+    }
+
+    /**
+     * Get simple class name from full class name
+     */
+    private String getSimpleClassName(String fullClassName) {
+        if (fullClassName == null) return "Unknown";
+        int lastDot = fullClassName.lastIndexOf('.');
+        return lastDot >= 0 ? fullClassName.substring(lastDot + 1) : fullClassName;
+    }
+
+    /**
+     * Create log directory if it doesn't exist
+     */
+    private void createLogDirectory() {
+        File logDir = new File(applicationContext.getExternalFilesDir(null), LOG_DIR);
+        if (!logDir.exists()) {
+            boolean created = logDir.mkdirs();
+            if (!created) {
+                logError(TAG, "Failed to create log directory: " + logDir.getAbsolutePath());
             }
+        }
+    }
+
+    /**
+     * Ensure log file exists and is writable
+     */
+    private void ensureLogFileExists() throws IOException {
+        synchronized (this) {
+            if (currentLogFile == null || !currentLogFile.exists()) {
+                rotateLogFile();
+            }
+        }
+    }
+
+    /**
+     * Rotate log file if needed
+     */
+    private void rotateLogFileIfNeeded() {
+        synchronized (this) {
+            if (currentLogFile != null && currentLogFile.exists() && currentLogFile.length() >= maxFileSize) {
+                rotateLogFile();
+            }
+        }
+    }
+
+    /**
+     * Rotate to a new log file
+     */
+    private void rotateLogFile() {
+        executorService.execute(() -> {
+            synchronized (this) {
+                try {
+                    // Close current writer
+                    if (currentLogWriter != null) {
+                        currentLogWriter.close();
+                        currentLogWriter = null;
+                    }
+
+                    // Process old file if needed
+                    if (currentLogFile != null && currentLogFile.exists()) {
+                        processOldLogFile(currentLogFile);
+                    }
+
+                    // Create new log file
+                    File logDir = new File(applicationContext.getExternalFilesDir(null), LOG_DIR);
+                    String fileName = LOG_FILE_PREFIX + fileDateFormat.format(new Date()) + LOG_FILE_EXTENSION;
+                    currentLogFile = new File(logDir, fileName);
+                    currentLogWriter = new BufferedWriter(new FileWriter(currentLogFile, true));
+                    currentFileSize = currentLogFile.length();
+
+                    // Cleanup old files if needed
+                    if (autoCleanupEnabled) {
+                        cleanupOldLogFiles();
+                    }
+
+                } catch (IOException e) {
+                    logError(TAG, "Failed to rotate log file", e);
+                }
+            }
+        });
+    }
+
+    /**
+     * Process old log file (compress/encrypt if enabled)
+     */
+    private void processOldLogFile(File oldFile) {
+        try {
+            File processedFile = oldFile;
+
+            // Compress if enabled
+            if (compressionEnabled) {
+                File compressedFile = compressFile(processedFile);
+                if (processedFile != compressedFile && processedFile.exists()) {
+                    processedFile.delete();
+                }
+                processedFile = compressedFile;
+            }
+
+            // Encrypt if enabled
+            if (encryptionEnabled) {
+                File encryptedFile = encryptFile(processedFile);
+                if (processedFile != encryptedFile && processedFile.exists()) {
+                    processedFile.delete();
+                }
+            }
+
+        } catch (Exception e) {
+            logError(TAG, "Failed to process old log file", e);
+        }
+    }
+
+    /**
+     * Compress log file using GZIP
+     */
+    private File compressFile(File inputFile) throws IOException {
+        File compressedFile = new File(inputFile.getAbsolutePath() + COMPRESSED_EXTENSION);
+
+        try (FileInputStream fis = new FileInputStream(inputFile);
+             FileOutputStream fos = new FileOutputStream(compressedFile);
+             GZIPOutputStream gzos = new GZIPOutputStream(fos)) {
+
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = fis.read(buffer)) > 0) {
+                gzos.write(buffer, 0, length);
+            }
+        }
+
+        logInfo(TAG, "Compressed log file: " + compressedFile.getName());
+        return compressedFile;
+    }
+
+    /**
+     * Encrypt log file using AES/GCM/NoPadding with a unique IV
+     */
+    private File encryptFile(File inputFile) throws Exception {
+        if (encryptionKey == null) {
+            logError(TAG, "Encryption key not available. Cannot encrypt file.");
+            return inputFile;
+        }
+
+        File encryptedFile = new File(inputFile.getAbsolutePath() + ENCRYPTED_EXTENSION);
+        
+        // Generate a unique IV for each encryption operation
+        byte[] iv = new byte[GCM_IV_LENGTH];
+        new Random().nextBytes(iv);
+        
+        Cipher cipher = Cipher.getInstance(ENCRYPTION_TRANSFORMATION_GCM);
+        cipher.init(Cipher.ENCRYPT_MODE, encryptionKey, new GCMParameterSpec(128, iv));
+
+        try (FileOutputStream fos = new FileOutputStream(encryptedFile);
+             FileInputStream fis = new FileInputStream(inputFile);
+             CipherOutputStream cos = new CipherOutputStream(fos, cipher)) {
             
-            // Then add file logs if needed
-            File[] logFiles = logDirectory.listFiles(file -> 
-                    file.getName().startsWith(LOG_FILE_PREFIX) && 
-                    file.getName().endsWith(LOG_FILE_EXTENSION));
-            
-            if (logFiles != null && allLogs.size() < 100) {
-                // Sort by modification time (newest first)
-                Arrays.sort(logFiles, (f1, f2) -> 
-                        Long.compare(f2.lastModified(), f1.lastModified()));
-                
-                for (File file : logFiles) {
-                    try {
-                        List<String> fileLines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-                        // Format file lines to match our clean format
-                        for (String line : fileLines) {
-                            if (!line.trim().isEmpty()) {
-                                String cleanLine = cleanFileLogEntry(line);
-                                if (!cleanLine.isEmpty()) {
-                                    allLogs.add(cleanLine);
-                                }
-                            }
+            // Write the IV to the beginning of the encrypted file
+            fos.write(iv);
+
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = fis.read(buffer)) > 0) {
+                cos.write(buffer, 0, length);
+            }
+        }
+
+        logInfo(TAG, "Encrypted log file: " + encryptedFile.getName());
+        return encryptedFile;
+    }
+
+    /**
+     * Cleanup old log files
+     */
+    private void cleanupOldLogFiles() {
+        File logDir = new File(applicationContext.getExternalFilesDir(null), LOG_DIR);
+        File[] logFiles = logDir.listFiles((dir, name) -> name.startsWith(LOG_FILE_PREFIX));
+
+        if (logFiles != null && logFiles.length > maxLogFiles) {
+            // Sort by last modified date
+            Arrays.sort(logFiles, (f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()));
+
+            // Delete oldest files
+            int filesToDelete = logFiles.length - maxLogFiles;
+            for (int i = 0; i < filesToDelete; i++) {
+                if (logFiles[i].delete()) {
+                    logInfo(TAG, "Deleted old log file: " + logFiles[i].getName());
+                }
+            }
+        }
+
+        lastCleanupTime = System.currentTimeMillis();
+    }
+
+    /**
+     * Start performance monitoring
+     */
+    private void startPerformanceMonitoring() {
+        executorService.execute(() -> {
+            while (performanceMonitoringEnabled) {
+                try {
+                    updatePerformanceMetrics();
+                    Thread.sleep(30000); // Update every 30 seconds
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Exception e) {
+                    logError(TAG, "Performance monitoring error", e);
+                }
+            }
+        });
+    }
+
+    /**
+     * Update performance metrics
+     */
+    private void updatePerformanceMetrics() {
+        long timestamp = System.currentTimeMillis();
+        performanceMetrics.put("memory_usage_" + timestamp, getMemoryUsage());
+        performanceMetrics.put("battery_level_" + timestamp, (long) getBatteryLevel());
+        performanceMetrics.put("storage_available_" + timestamp, getAvailableStorage());
+        performanceMetrics.put("network_status_" + timestamp, (long) getNetworkStatusValue());
+
+        // Keep only recent metrics (last hour)
+        long oneHourAgo = timestamp - 3600000;
+        performanceMetrics.entrySet().removeIf(entry -> {
+            String key = entry.getKey();
+            String[] parts = key.split("_");
+            if (parts.length >= 3) {
+                try {
+                    long metricTime = Long.parseLong(parts[parts.length - 1]);
+                    return metricTime < oneHourAgo;
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+            return false;
+        });
+    }
+
+    /**
+     * Get memory usage in MB
+     */
+    private long getMemoryUsage() {
+        ActivityManager activityManager = (ActivityManager) applicationContext.getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+        activityManager.getMemoryInfo(memoryInfo);
+
+        long usedMemory = memoryInfo.totalMem - memoryInfo.availMem;
+        return usedMemory / (1024 * 1024); // Convert to MB
+    }
+
+    /**
+     * Get battery level percentage
+     */
+    private int getBatteryLevel() {
+        try {
+            BatteryManager batteryManager = (BatteryManager) applicationContext.getSystemService(Context.BATTERY_SERVICE);
+            return batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Get available storage space in GB
+     */
+    private long getAvailableStorage() {
+        try {
+            File logDir = applicationContext.getExternalFilesDir(null);
+            if (logDir == null) {
+                return -1;
+            }
+            StatFs stat = new StatFs(logDir.getPath());
+            long availableBytes = stat.getAvailableBytes();
+            return availableBytes / (1024 * 1024 * 1024); // Convert to GB
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Get network status
+     */
+    private String getNetworkStatus() {
+        try {
+            android.net.ConnectivityManager cm = (android.net.ConnectivityManager)
+                applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+            android.net.NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+
+            if (activeNetwork != null && activeNetwork.isConnected()) {
+                switch (activeNetwork.getType()) {
+                    case android.net.ConnectivityManager.TYPE_WIFI:
+                        return "WiFi";
+                    case android.net.ConnectivityManager.TYPE_MOBILE:
+                        return "Mobile";
+                    default:
+                        return "Connected";
+                }
+            }
+            return "Disconnected";
+        } catch (Exception e) {
+            return "Unknown";
+        }
+    }
+
+    /**
+     * Get network status value for performance metrics
+     * (0 = Disconnected, 1 = Connected)
+     */
+    private int getNetworkStatusValue() {
+        try {
+            android.net.ConnectivityManager cm = (android.net.ConnectivityManager)
+                applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+            android.net.NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+            return (activeNetwork != null && activeNetwork.isConnected()) ? 1 : 0;
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Schedule log cleanup
+     */
+    private void scheduleLogCleanup() {
+        executorService.execute(() -> {
+            while (autoCleanupEnabled) {
+                try {
+                    long currentTime = System.currentTimeMillis();
+                    // Cleanup every 24 hours
+                    if (currentTime - lastCleanupTime > 86400000) {
+                        cleanupOldLogFiles();
+                    }
+                    Thread.sleep(3600000); // Check every hour
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Exception e) {
+                    logError(TAG, "Scheduled cleanup error", e);
+                }
+            }
+        });
+    }
+
+    /**
+     * Log device information
+     */
+    private void logDeviceInfo() {
+        logInfo(TAG, "Device Info - Model: " + Build.MODEL +
+                     ", Android: " + Build.VERSION.RELEASE +
+                     ", API: " + Build.VERSION.SDK_INT +
+                     ", Manufacturer: " + Build.MANUFACTURER);
+
+        logInfo(TAG, "App Info - Package: " + applicationContext.getPackageName() +
+                     ", Process ID: " + android.os.Process.myPid() +
+                     ", Thread ID: " + android.os.Process.myTid());
+
+        logInfo(TAG, "System Info - Memory: " + getMemoryUsage() + "MB" +
+                     ", Storage: " + getAvailableStorage() + "GB" +
+                     ", Battery: " + getBatteryLevel() + "%" +
+                     ", Network: " + getNetworkStatus());
+    }
+
+    /**
+     * Get stack trace as string
+     */
+    private String getStackTraceString(Throwable t) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        t.printStackTrace(pw);
+        return sw.toString();
+    }
+
+    /**
+     * Get feature count
+     */
+    private int getFeatureCount() {
+        return 24; // CPU monitoring removed
+    }
+
+   /**
+     * Custom uncaught exception handler
+     */
+    private class CustomUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+        private final Thread.UncaughtExceptionHandler defaultHandler;
+
+        public CustomUncaughtExceptionHandler() {
+            this.defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
+        }
+
+        @Override
+        public void uncaughtException(@NonNull Thread t, @NonNull Throwable e) {
+            try {
+                logError(TAG, "FATAL CRASH in thread " + t.getName(), e);
+
+                // Create crash report
+                LogEntry crashEntry = new LogEntry("CRASH", "FATAL", "Application crashed: " + e.getMessage());
+                crashEntry.metadata.put("thread", t.getName());
+                crashEntry.metadata.put("exception_type", e.getClass().getSimpleName());
+                crashEntry.metadata.put("stack_trace", getStackTraceString(e));
+                crashEntry.metadata.put("device_info", getDeviceInfoMap());
+                crashEntry.metadata.put("performance_state", getCurrentPerformanceState());
+
+                // Force write crash log
+                String crashLog = formatLogEntry(crashEntry, LogFormat.JSON);
+                File crashFile = new File(applicationContext.getExternalFilesDir(null),
+                    LOG_DIR + "/crash_" + fileDateFormat.format(new Date()) + ".log");
+
+                try (FileWriter writer = new FileWriter(crashFile)) {
+                    writer.write(crashLog);
+                    writer.flush();
+                }
+
+            } catch (Exception ex) {
+                // Ignore errors in crash handler
+            } finally {
+                if (defaultHandler != null) {
+                    defaultHandler.uncaughtException(t, e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Get device info as map
+     */
+    private Map<String, Object> getDeviceInfoMap() {
+        Map<String, Object> info = new HashMap<>();
+        info.put("model", Build.MODEL);
+        info.put("manufacturer", Build.MANUFACTURER);
+        info.put("android_version", Build.VERSION.RELEASE);
+        info.put("api_level", Build.VERSION.SDK_INT);
+        info.put("app_version", getAppVersion());
+        info.put("available_processors", Runtime.getRuntime().availableProcessors());
+        info.put("max_memory", Runtime.getRuntime().maxMemory() / (1024 * 1024));
+        return info;
+    }
+
+    /**
+     * Get current performance state
+     */
+    private Map<String, Object> getCurrentPerformanceState() {
+        Map<String, Object> state = new HashMap<>();
+        state.put("memory_usage_mb", getMemoryUsage());
+        state.put("battery_level", getBatteryLevel());
+        state.put("available_storage_gb", getAvailableStorage());
+        state.put("network_status", getNetworkStatus());
+        state.put("log_count", logCounter.get());
+        return state;
+    }
+
+    /**
+     * Get app version
+     */
+    private String getAppVersion() {
+        try {
+            return applicationContext.getPackageManager()
+                .getPackageInfo(applicationContext.getPackageName(), 0).versionName;
+        } catch (Exception e) {
+            return "Unknown";
+        }
+    }
+
+    // ==================== PUBLIC API METHODS ====================
+
+    /**
+     * Log verbose message
+     */
+    public static void logVerbose(String tag, String message) {
+        Timber.tag(tag).v(message);
+    }
+
+    /**
+     * Log debug message
+     */
+    public static void logDebug(String tag, String message) {
+        Timber.tag(tag).d(message);
+    }
+
+    /**
+     * Log info message
+     */
+    public static void logInfo(String tag, String message) {
+        Timber.tag(tag).i(message);
+    }
+
+    /**
+     * Log warning message
+     */
+    public static void logWarning(String tag, String message) {
+        Timber.tag(tag).w(message);
+    }
+
+    /**
+     * Log error message
+     */
+    public static void logError(String tag, String message) {
+        Timber.tag(tag).e(message);
+    }
+
+    /**
+     * Log error message with exception
+     */
+    public static void logError(String tag, String message, Throwable throwable) {
+        Timber.tag(tag).e(throwable, message);
+    }
+
+    /**
+     * Log WTF message
+     */
+    public static void logWtf(String tag, String message) {
+        Timber.tag(tag).wtf(message);
+    }
+
+    /**
+     * Log method entry for performance tracking
+     */
+    public static void logMethodEntry(String className, String methodName) {
+        long timestamp = System.currentTimeMillis();
+        String key = className + "." + methodName + "_entry";
+        getInstance().performanceMetrics.put(key, timestamp);
+        logDebug("PERF", "Method Entry: " + className + "." + methodName);
+    }
+
+    /**
+     * Log method exit for performance tracking
+     */
+    public static void logMethodExit(String className, String methodName) {
+        long timestamp = System.currentTimeMillis();
+        String entryKey = className + "." + methodName + "_entry";
+        Long entryTime = getInstance().performanceMetrics.get(entryKey);
+
+        if (entryTime != null) {
+            long duration = timestamp - entryTime;
+            logDebug("PERF", "Method Exit: " + className + "." + methodName + " (Duration: " + duration + "ms)");
+            getInstance().performanceMetrics.remove(entryKey);
+        } else {
+            logDebug("PERF", "Method Exit: " + className + "." + methodName);
+        }
+    }
+
+    /**
+     * Log network request
+     */
+    public static void logNetworkRequest(String method, String url, int responseCode, long duration) {
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("method", method);
+        metadata.put("url", url);
+        metadata.put("response_code", responseCode);
+        metadata.put("duration_ms", duration);
+
+        LogEntry entry = new LogEntry("NETWORK", "NET", method + " " + url + " -> " + responseCode);
+        entry.metadata.putAll(metadata);
+        getInstance().storeLogEntry(entry);
+
+        logInfo("NETWORK", method + " " + url + " -> " + responseCode + " (" + duration + "ms)");
+    }
+
+    /**
+     * Log database operation
+     */
+    public static void logDatabaseOperation(String operation, String table, long duration) {
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("operation", operation);
+        metadata.put("table", table);
+        metadata.put("duration_ms", duration);
+
+        LogEntry entry = new LogEntry("DATABASE", "DB", operation + " on " + table);
+        entry.metadata.putAll(metadata);
+        getInstance().storeLogEntry(entry);
+
+        logInfo("DATABASE", operation + " on " + table + " (" + duration + "ms)");
+    }
+
+    /**
+     * Log user action
+     */
+    public static void logUserAction(String action, String screen, Map<String, Object> properties) {
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("action", action);
+        metadata.put("screen", screen);
+        metadata.put("timestamp", System.currentTimeMillis());
+        if (properties != null) {
+            metadata.putAll(properties);
+        }
+
+        LogEntry entry = new LogEntry("USER_ACTION", "UI", action + " on " + screen);
+        entry.metadata.putAll(metadata);
+        getInstance().storeLogEntry(entry);
+
+        logInfo("USER_ACTION", action + " on " + screen);
+    }
+
+    /**
+     * Get all log entries
+     */
+    public List<LogEntry> getAllLogEntries() {
+        synchronized (recentLogs) {
+            return new ArrayList<>(recentLogs);
+        }
+    }
+
+    /**
+     * Filter log entries by level
+     */
+    public List<LogEntry> filterLogsByLevel(LogLevel level) {
+        synchronized (recentLogs) {
+            List<LogEntry> filtered = new ArrayList<>();
+            for (LogEntry entry : recentLogs) {
+                if (entry.level.equals(level.fullName)) {
+                    filtered.add(entry);
+                }
+            }
+            return filtered;
+        }
+    }
+
+    /**
+     * Filter log entries by tag
+     */
+    public List<LogEntry> filterLogsByTag(String tag) {
+        synchronized (recentLogs) {
+            List<LogEntry> filtered = new ArrayList<>();
+            for (LogEntry entry : recentLogs) {
+                if (entry.tag.equals(tag)) {
+                    filtered.add(entry);
+                }
+            }
+            return filtered;
+        }
+    }
+
+    /**
+     * Filter log entries by time range
+     */
+    public List<LogEntry> filterLogsByTimeRange(long startTime, long endTime) {
+        synchronized (recentLogs) {
+            List<LogEntry> filtered = new ArrayList<>();
+            for (LogEntry entry : recentLogs) {
+                if (entry.timestamp >= startTime && entry.timestamp <= endTime) {
+                    filtered.add(entry);
+                }
+            }
+            return filtered;
+        }
+    }
+
+    /**
+     * Search log entries by message content
+     */
+    public List<LogEntry> searchLogsByMessage(String query) {
+        synchronized (recentLogs) {
+            List<LogEntry> filtered = new ArrayList<>();
+            String lowerQuery = query.toLowerCase();
+            for (LogEntry entry : recentLogs) {
+                if (entry.message.toLowerCase().contains(lowerQuery)) {
+                    filtered.add(entry);
+                }
+            }
+            return filtered;
+        }
+    }
+
+    /**
+     * Search log entries by multiple criteria
+     */
+    public List<LogEntry> searchLogs(String query, LogLevel level, String tag, long startTime, long endTime) {
+        synchronized (recentLogs) {
+            List<LogEntry> filtered = new ArrayList<>();
+            String lowerQuery = query != null ? query.toLowerCase() : null;
+
+            for (LogEntry entry : recentLogs) {
+                boolean matches = true;
+
+                if (lowerQuery != null && !entry.message.toLowerCase().contains(lowerQuery)) {
+                    matches = false;
+                }
+                if (level != null && !entry.level.equals(level.fullName)) {
+                    matches = false;
+                }
+                if (tag != null && !entry.tag.equals(tag)) {
+                    matches = false;
+                }
+                if (startTime > 0 && entry.timestamp < startTime) {
+                    matches = false;
+                }
+                if (endTime > 0 && entry.timestamp > endTime) {
+                    matches = false;
+                }
+
+                if (matches) {
+                    filtered.add(entry);
+                }
+            }
+            return filtered;
+        }
+    }
+
+    /**
+     * Get log statistics
+     */
+    public Map<String, Object> getLogStatistics() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("total_logs", logCounter.get());
+        stats.put("active_tags", activeTags.size());
+        stats.put("recent_logs_count", recentLogs.size());
+        stats.put("log_counts_by_level", getLogCountsByLevel());
+        stats.put("performance_metrics_count", performanceMetrics.size());
+        stats.put("file_logging_enabled", fileLoggingEnabled);
+        stats.put("current_file_size", currentFileSize);
+        stats.put("last_cleanup_time", lastCleanupTime);
+        stats.put("memory_usage_mb", getMemoryUsage());
+        stats.put("battery_level", getBatteryLevel());
+        stats.put("available_storage_gb", getAvailableStorage());
+        stats.put("network_status", getNetworkStatus());
+        return stats;
+    }
+
+    /**
+     * Get log counts by level
+     */
+    private Map<String, Integer> getLogCountsByLevel() {
+        Map<String, Integer> levelCounts = new HashMap<>();
+        for (LogLevel level : LogLevel.values()) {
+            int count = 0;
+            for (Map.Entry<String, Integer> entry : logCounts.entrySet()) {
+                if (entry.getKey().startsWith(level.fullName + "_")) {
+                    count += entry.getValue();
+                }
+            }
+            levelCounts.put(level.fullName, count);
+        }
+        return levelCounts;
+    }
+
+    /**
+     * Export logs to file
+     */
+    public File exportLogs(LogFormat format) throws IOException {
+        File exportDir = new File(applicationContext.getExternalFilesDir(null), "exports");
+        if (!exportDir.exists()) {
+            exportDir.mkdirs();
+        }
+
+        String fileName = "log_export_" + fileDateFormat.format(new Date());
+        switch (format) {
+            case JSON:
+                fileName += ".json";
+                break;
+            case XML:
+                fileName += ".xml";
+                break;
+            case CSV:
+                fileName += ".csv";
+                break;
+            default:
+                fileName += ".txt";
+                break;
+        }
+
+        File exportFile = new File(exportDir, fileName);
+
+        try (FileWriter writer = new FileWriter(exportFile)) {
+            if (format == LogFormat.CSV) {
+                writer.write("Timestamp,Level,Tag,Message,Thread,Class,Method,Line\n");
+            } else if (format == LogFormat.XML) {
+                writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<logs>\n");
+            } else if (format == LogFormat.JSON) {
+                writer.write("{\n  \"logs\": [\n");
+            }
+
+            synchronized (recentLogs) {
+                for (int i = 0; i < recentLogs.size(); i++) {
+                    LogEntry entry = recentLogs.get(i);
+                    String formattedEntry = formatLogEntry(entry, format);
+
+                    if (format == LogFormat.JSON) {
+                        writer.write("    " + formattedEntry);
+                        if (i < recentLogs.size() - 1) {
+                            writer.write(",");
                         }
-                        
-                        // Limit total logs for performance
-                        if (allLogs.size() > 200) break;
-                    } catch (Exception e) {
-                        error(TAG, "Error reading log file: " + file.getName(), e);
+                        writer.write("\n");
+                    } else {
+                        writer.write(formattedEntry + "\n");
                     }
                 }
             }
-            
-        } catch (Exception e) {
-            error(TAG, "Error reading log files", e);
-            // Return recent logs as fallback
-            synchronized (recentLogs) {
-                allLogs.clear();
-                allLogs.addAll(new ArrayList<>(recentLogs));
+
+            if (format == LogFormat.XML) {
+                writer.write("</logs>\n");
+            } else if (format == LogFormat.JSON) {
+                writer.write("  ]\n}\n");
             }
         }
-        
-        return allLogs;
+
+        logInfo(TAG, "Logs exported to: " + exportFile.getAbsolutePath());
+        return exportFile;
     }
-    
-    /**
-     * Clean log entries from file for consistent formatting
-     */
-    private String cleanFileLogEntry(String rawLine) {
-        try {
-            // Skip empty or very short lines
-            if (rawLine == null || rawLine.trim().length() < 10) {
-                return "";
-            }
-            
-            // Extract timestamp, level, logger, and message
-            String cleaned = rawLine.trim();
-            
-            // Replace complex logger names
-            cleaned = cleaned.replaceAll("com\\.axiomloader\\.", "");
-            
-            // Remove session context if present
-            cleaned = cleaned.replaceAll("\\[AX_[^\\]]+\\]\\s*", "");
-            cleaned = cleaned.replaceAll("\\[LogUtils-Worker\\]\\s*", "");
-            
-            // Ensure consistent spacing
-            cleaned = cleaned.replaceAll("\\s+", " ");
-            
-            return cleaned;
-        } catch (Exception e) {
-            return rawLine; // Return original if cleaning fails
-        }
-    }
-    
-    /**
-     * Get all thread names that have logged
-     */
-    public List<String> getAllThreadNames() {
-        return new ArrayList<>(threadNames);
-    }
-    
-    /**
-     * Get all logger names that have been used
-     */
-    public List<String> getAllLoggerNames() {
-        List<String> cleanNames = new ArrayList<>();
-        for (String name : loggerNames) {
-            cleanNames.add(name.replace("com.axiomloader.", ""));
-        }
-        return cleanNames;
-    }
-    
+
     /**
      * Clear all logs
      */
     public void clearAllLogs() {
-        logExecutor.execute(() -> {
+        synchronized (recentLogs) {
+            recentLogs.clear();
+        }
+        logCounts.clear();
+        performanceMetrics.clear();
+        activeTags.clear();
+        logCounter.set(0);
+
+        executorService.execute(() -> {
             try {
-                File[] logFiles = logDirectory.listFiles(file -> 
-                        file.getName().startsWith(LOG_FILE_PREFIX));
-                
+                synchronized (this) {
+                    if (currentLogWriter != null) {
+                        currentLogWriter.close();
+                        currentLogWriter = null;
+                    }
+                }
+
+                File logDir = new File(applicationContext.getExternalFilesDir(null), LOG_DIR);
+                File[] logFiles = logDir.listFiles();
                 if (logFiles != null) {
                     for (File file : logFiles) {
                         file.delete();
                     }
                 }
-                
-                // Clear in-memory logs
-                synchronized (recentLogs) {
-                    recentLogs.clear();
-                }
-                
-                // Reset statistics
-                for (AtomicLong counter : logCounters.values()) {
-                    counter.set(0);
-                }
-                
-                // Recreate current log file
-                setupLogDirectory();
-                
-                info(TAG, "All logs cleared successfully");
-                
+
+                rotateLogFile();
+                logInfo(TAG, "All logs cleared successfully");
             } catch (Exception e) {
-                error(TAG, "Error clearing logs", e);
+                logError(TAG, "Failed to clear log files", e);
             }
         });
     }
-    
+
     /**
-     * Export logs in specified format
+     * Get active tags
      */
-    public File exportLogs(String format, List<String> logEntries) throws IOException {
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-        String fileName = "exported_logs_" + timestamp + "." + format.toLowerCase();
-        File exportFile = new File(logDirectory, fileName);
-        
-        switch (format.toUpperCase()) {
-            case "TXT":
-                exportAsTxt(exportFile, logEntries);
-                break;
-            case "JSON":
-                exportAsJson(exportFile, logEntries);
-                break;
-            case "XML":
-                exportAsXml(exportFile, logEntries);
-                break;
-            case "CSV":
-                exportAsCsv(exportFile, logEntries);
-                break;
-            case "HTML":
-                exportAsHtml(exportFile, logEntries);
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported export format: " + format);
-        }
-        
-        info(TAG, "Logs exported to: " + exportFile.getAbsolutePath());
-        return exportFile;
+    public Set<String> getActiveTags() {
+        return new HashSet<>(activeTags);
     }
-    
+
     /**
-     * Export logs as plain text
+     * Get performance metrics for visualization
      */
-    private void exportAsTxt(File file, List<String> logEntries) throws IOException {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(file, StandardCharsets.UTF_8))) {
-            writer.println("=== Axiom Loader Log Export ===");
-            writer.println("Export Date: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()));
-            writer.println("Session ID: " + sessionId);
-            writer.println("Total Entries: " + logEntries.size());
-            writer.println("=================================");
-            writer.println();
-            
-            for (String entry : logEntries) {
-                writer.println(entry);
+    public Map<String, List<Map<String, Object>>> getPerformanceHistory() {
+        Map<String, List<Map<String, Object>>> history = new HashMap<>();
+
+        List<Map<String, Object>> memoryHistory = new ArrayList<>();
+        List<Map<String, Object>> batteryHistory = new ArrayList<>();
+        List<Map<String, Object>> storageHistory = new ArrayList<>();
+        List<Map<String, Object>> networkHistory = new ArrayList<>();
+
+        for (Map.Entry<String, Long> entry : performanceMetrics.entrySet()) {
+            String key = entry.getKey();
+            Long value = entry.getValue();
+
+            if (key.startsWith("memory_usage_")) {
+                String timestamp = key.substring("memory_usage_".length());
+                Map<String, Object> point = new HashMap<>();
+                point.put("timestamp", Long.parseLong(timestamp));
+                point.put("value", value);
+                memoryHistory.add(point);
+            } else if (key.startsWith("battery_level_")) {
+                String timestamp = key.substring("battery_level_".length());
+                Map<String, Object> point = new HashMap<>();
+                point.put("timestamp", Long.parseLong(timestamp));
+                point.put("value", value);
+                batteryHistory.add(point);
+            } else if (key.startsWith("storage_available_")) {
+                String timestamp = key.substring("storage_available_".length());
+                Map<String, Object> point = new HashMap<>();
+                point.put("timestamp", Long.parseLong(timestamp));
+                point.put("value", value);
+                storageHistory.add(point);
+            } else if (key.startsWith("network_status_")) {
+                String timestamp = key.substring("network_status_".length());
+                Map<String, Object> point = new HashMap<>();
+                point.put("timestamp", Long.parseLong(timestamp));
+                point.put("value", value);
+                networkHistory.add(point);
             }
         }
+
+        history.put("memory", memoryHistory);
+        history.put("battery", batteryHistory);
+        history.put("storage", storageHistory);
+        history.put("network", networkHistory);
+
+        return history;
     }
-    
-    /**
-     * Export logs as JSON
-     */
-    private void exportAsJson(File file, List<String> logEntries) throws IOException {
-        ObjectNode root = jsonMapper.createObjectNode();
-        root.put("exportDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()));
-        root.put("sessionId", sessionId);
-        root.put("totalEntries", logEntries.size());
-        
-        // Add log entries
-        ArrayNode logs = jsonMapper.createArrayNode();
-        for (String entry : logEntries) {
-            logs.add(entry);
-        }
-        root.set("logs", logs);
-        
-        jsonMapper.writerWithDefaultPrettyPrinter().writeValue(file, root);
+
+    // ==================== CONFIGURATION METHODS ====================
+
+    public void setFileLoggingEnabled(boolean enabled) {
+        this.fileLoggingEnabled = enabled;
+        savePreferences();
+        logInfo(TAG, "File logging " + (enabled ? "enabled" : "disabled"));
     }
-    
-    /**
-     * Export logs as XML
-     */
-    private void exportAsXml(File file, List<String> logEntries) throws IOException {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(file, StandardCharsets.UTF_8))) {
-            writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-            writer.println("<logExport>");
-            writer.println("  <metadata>");
-            writer.println("    <exportDate>" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()) + "</exportDate>");
-            writer.println("    <sessionId>" + sessionId + "</sessionId>");
-            writer.println("    <totalEntries>" + logEntries.size() + "</totalEntries>");
-            writer.println("  </metadata>");
-            
-            writer.println("  <logs>");
-            for (String entry : logEntries) {
-                writer.println("    <log><![CDATA[" + entry + "]]></log>");
-            }
-            writer.println("  </logs>");
-            writer.println("</logExport>");
-        }
-    }
-    
-    /**
-     * Export logs as CSV
-     */
-    private void exportAsCsv(File file, List<String> logEntries) throws IOException {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(file, StandardCharsets.UTF_8))) {
-            writer.println("Timestamp,Level,Logger,Message");
-            
-            for (String entry : logEntries) {
-                String[] parts = parseLogEntryToParts(entry);
-                writer.printf("\"%s\",\"%s\",\"%s\",\"%s\"%n",
-                        parts[0], parts[1], parts[2], parts[3]);
-            }
-        }
-    }
-    
-    /**
-     * Export logs as HTML
-     */
-    private void exportAsHtml(File file, List<String> logEntries) throws IOException {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(file, StandardCharsets.UTF_8))) {
-            writer.println("<!DOCTYPE html>");
-            writer.println("<html><head>");
-            writer.println("<title>Axiom Loader Log Export</title>");
-            writer.println("<style>");
-            writer.println("body { font-family: monospace; background: #1a1a1a; color: #ffffff; padding: 20px; }");
-            writer.println(".log-entry { margin: 5px 0; padding: 5px; }");
-            writer.println(".error { color: #ff6b6b; }");
-            writer.println(".warn { color: #ffd93d; }");
-            writer.println(".info { color: #6bcf7f; }");
-            writer.println(".debug { color: #4d96ff; }");
-            writer.println(".trace { color: #9b59b6; }");
-            writer.println("</style></head><body>");
-            
-            writer.println("<h1>Axiom Loader Log Export</h1>");
-            writer.println("<p>Export Date: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()) + "</p>");
-            
-            for (String entry : logEntries) {
-                String cssClass = getCssClassForLogLevel(entry);
-                writer.println("<div class=\"log-entry " + cssClass + "\">" + 
-                        escapeHtml(entry) + "</div>");
-            }
-            
-            writer.println("</body></html>");
-        }
-    }
-    
-    /**
-     * Parse log entry into parts for CSV export
-     */
-    private String[] parseLogEntryToParts(String entry) {
-        String[] parts = {"", "INFO", "unknown", entry};
-        
-        try {
-            // Parse our clean format: [timestamp] [level] logger - message
-            if (entry.startsWith("[") && entry.contains("] [")) {
-                int firstClose = entry.indexOf("]");
-                parts[0] = entry.substring(1, firstClose);
-                
-                String remaining = entry.substring(firstClose + 3);
-                if (remaining.startsWith("[") && remaining.contains("]")) {
-                    int secondClose = remaining.indexOf("]");
-                    parts[1] = remaining.substring(1, secondClose);
-                    
-                    remaining = remaining.substring(secondClose + 2);
-                    if (remaining.contains(" - ")) {
-                        String[] loggerAndMessage = remaining.split(" - ", 2);
-                        parts[2] = loggerAndMessage[0].trim();
-                        parts[3] = loggerAndMessage.length > 1 ? loggerAndMessage[1] : "";
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // Keep defaults if parsing fails
-        }
-        
-        return parts;
-    }
-    
-    /**
-     * Get CSS class for log level
-     */
-    private String getCssClassForLogLevel(String entry) {
-        if (entry.contains("[ERROR]") || entry.contains("[FATAL]")) return "error";
-        if (entry.contains("[WARN]")) return "warn";
-        if (entry.contains("[INFO]")) return "info";
-        if (entry.contains("[DEBUG]")) return "debug";
-        if (entry.contains("[TRACE]")) return "trace";
-        return "";
-    }
-    
-    /**
-     * Generate test logs for demonstration
-     */
-    public void generateTestLogs(int count) {
-        logExecutor.execute(() -> {
-            String[] testMessages = {
-                "Application started successfully",
-                "User interface loaded",
-                "Database connection established", 
-                "Processing user request",
-                "Network request completed",
-                "Cache updated successfully",
-                "Background task finished",
-                "Configuration loaded",
-                "Memory usage is normal",
-                "Performance check passed"
-            };
-            
-            Level[] levels = {Level.INFO, Level.DEBUG, Level.WARN, Level.ERROR};
-            String[] loggers = {"MainActivity", "DatabaseManager", "NetworkService", "CacheManager"};
-            
-            for (int i = 0; i < count; i++) {
-                Level level = levels[i % levels.length];
-                String logger = loggers[i % loggers.length];
-                String message = testMessages[i % testMessages.length] + " #" + (i + 1);
-                
-                logMessage(level, logger, message, null);
-                
-                try {
-                    Thread.sleep(50); // Small delay to spread timestamps
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-            
-            info(TAG, "Generated " + count + " test log entries");
-        });
-    }
-    
-    /**
-     * Get total log file size
-     */
-    public long getTotalLogFileSize() {
-        long totalSize = 0;
-        try {
-            File[] logFiles = logDirectory.listFiles(file -> 
-                    file.getName().startsWith(LOG_FILE_PREFIX));
-            
-            if (logFiles != null) {
-                for (File file : logFiles) {
-                    totalSize += file.length();
-                }
-            }
-        } catch (Exception e) {
-            error(TAG, "Error calculating total log size", e);
-        }
-        return totalSize;
-    }
-    
-    /**
-     * Get oldest log timestamp
-     */
-    public String getOldestLogTimestamp() {
-        try {
-            File[] logFiles = logDirectory.listFiles(file -> 
-                    file.getName().startsWith(LOG_FILE_PREFIX));
-            
-            if (logFiles != null && logFiles.length > 0) {
-                File oldestFile = Collections.min(Arrays.asList(logFiles), 
-                        Comparator.comparing(File::lastModified));
-                return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-                        .format(new Date(oldestFile.lastModified()));
-            }
-        } catch (Exception e) {
-            error(TAG, "Error getting oldest log timestamp", e);
-        }
-        return "N/A";
-    }
-    
-    /**
-     * Get newest log timestamp
-     */
-    public String getNewestLogTimestamp() {
-        try {
-            File[] logFiles = logDirectory.listFiles(file -> 
-                    file.getName().startsWith(LOG_FILE_PREFIX));
-            
-            if (logFiles != null && logFiles.length > 0) {
-                File newestFile = Collections.max(Arrays.asList(logFiles), 
-                        Comparator.comparing(File::lastModified));
-                return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-                        .format(new Date(newestFile.lastModified()));
-            }
-        } catch (Exception e) {
-            error(TAG, "Error getting newest log timestamp", e);
-        }
-        return "N/A";
-    }
-    
-    /**
-     * Get log statistics
-     */
-    public Map<String, Long> getLogStatistics() {
-        Map<String, Long> stats = new HashMap<>();
-        for (Map.Entry<String, AtomicLong> entry : logCounters.entrySet()) {
-            stats.put(entry.getKey(), entry.getValue().get());
-        }
-        stats.put("TOTAL_BYTES", totalBytesLogged.get());
-        stats.put("SESSION_DURATION", System.currentTimeMillis() - sessionStartTime.get());
-        stats.put("TOTAL_FILE_SIZE", getTotalLogFileSize());
-        return stats;
-    }
-    
-    /**
-     * Set log level dynamically
-     */
-    public void setLogLevel(String levelStr) {
-        try {
-            this.logLevel = Level.valueOf(levelStr.toUpperCase());
-            preferences.edit().putString("log_level", levelStr.toUpperCase()).apply();
-            
-            // Update Log4j2 configuration
-            if (loggerContext != null) {
-                org.apache.logging.log4j.core.config.Configurator.setRootLevel(logLevel);
-                loggerContext.updateLoggers();
-            }
-            
-            info(TAG, "Log level changed to: " + levelStr);
-        } catch (IllegalArgumentException e) {
-            error(TAG, "Invalid log level: " + levelStr, e);
-        }
-    }
-    
-    /**
-     * Enable/disable real-time logging
-     */
-    public void setRealTimeLogging(boolean enabled) {
-        this.realTimeLoggingEnabled = enabled;
-        preferences.edit().putBoolean("real_time_logging", enabled).apply();
-        info(TAG, "Real-time logging " + (enabled ? "enabled" : "disabled"));
-    }
-    
-    /**
-     * Enable/disable compression
-     */
+
     public void setCompressionEnabled(boolean enabled) {
         this.compressionEnabled = enabled;
-        preferences.edit().putBoolean("compression_enabled", enabled).apply();
-        info(TAG, "Log compression " + (enabled ? "enabled" : "disabled"));
+        savePreferences();
+        logInfo(TAG, "Log compression " + (enabled ? "enabled" : "disabled"));
     }
-    
+
+    public void setEncryptionEnabled(boolean enabled) {
+        this.encryptionEnabled = enabled;
+        savePreferences();
+        logInfo(TAG, "Log encryption " + (enabled ? "enabled" : "disabled"));
+    }
+
+    public void setCrashReportingEnabled(boolean enabled) {
+        this.crashReportingEnabled = enabled;
+        savePreferences();
+        logInfo(TAG, "Crash reporting " + (enabled ? "enabled" : "disabled"));
+    }
+
+    public void setPerformanceMonitoringEnabled(boolean enabled) {
+        this.performanceMonitoringEnabled = enabled;
+        savePreferences();
+        logInfo(TAG, "Performance monitoring " + (enabled ? "enabled" : "disabled"));
+
+        if (enabled) {
+            startPerformanceMonitoring();
+        }
+    }
+
+    public void setAutoCleanupEnabled(boolean enabled) {
+        this.autoCleanupEnabled = enabled;
+        savePreferences();
+        logInfo(TAG, "Auto cleanup " + (enabled ? "enabled" : "disabled"));
+
+        if (enabled) {
+            scheduleLogCleanup();
+        }
+    }
+
+    public void setColoredLogsEnabled(boolean enabled) {
+        this.coloredLogsEnabled = enabled;
+        savePreferences();
+        logInfo(TAG, "Colored logs " + (enabled ? "enabled" : "disabled"));
+    }
+
+    public void setThreadInfoEnabled(boolean enabled) {
+        this.threadInfoEnabled = enabled;
+        savePreferences();
+        logInfo(TAG, "Thread info " + (enabled ? "enabled" : "disabled"));
+    }
+
+    public void setStackTraceEnabled(boolean enabled) {
+        this.stackTraceEnabled = enabled;
+        savePreferences();
+        logInfo(TAG, "Stack trace " + (enabled ? "enabled" : "disabled"));
+    }
+
+    public void setMaxLogFiles(int maxFiles) {
+        this.maxLogFiles = Math.max(1, Math.min(maxFiles, 100));
+        savePreferences();
+        logInfo(TAG, "Max log files set to: " + this.maxLogFiles);
+    }
+
+    public void setMaxFileSize(long maxSize) {
+        this.maxFileSize = Math.max(1024 * 1024, maxSize);
+        savePreferences();
+        logInfo(TAG, "Max file size set to: " + (this.maxFileSize / (1024 * 1024)) + "MB");
+    }
+
+    // Getters for configuration
+    public boolean isFileLoggingEnabled() { return fileLoggingEnabled; }
+    public boolean isCompressionEnabled() { return compressionEnabled; }
+    public boolean isEncryptionEnabled() { return encryptionEnabled; }
+    public boolean isCrashReportingEnabled() { return crashReportingEnabled; }
+    public boolean isPerformanceMonitoringEnabled() { return performanceMonitoringEnabled; }
+    public boolean isAutoCleanupEnabled() { return autoCleanupEnabled; }
+    public boolean isColoredLogsEnabled() { return coloredLogsEnabled; }
+    public boolean isThreadInfoEnabled() { return threadInfoEnabled; }
+    public boolean isStackTraceEnabled() { return stackTraceEnabled; }
+    public int getMaxLogFiles() { return maxLogFiles; }
+    public long getMaxFileSize() { return maxFileSize; }
+
     /**
-     * Shutdown LogUtils and cleanup resources
+     * Get current log file path
+     */
+    public String getCurrentLogFilePath() {
+        return currentLogFile != null ? currentLogFile.getAbsolutePath() : "No active log file";
+    }
+
+    /**
+     * Get all log files
+     */
+    public List<File> getAllLogFiles() {
+        List<File> logFiles = new ArrayList<>();
+        File logDir = new File(applicationContext.getExternalFilesDir(null), LOG_DIR);
+        File[] files = logDir.listFiles((dir, name) -> name.startsWith(LOG_FILE_PREFIX));
+
+        if (files != null) {
+            Arrays.sort(files, (f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+            logFiles.addAll(Arrays.asList(files));
+        }
+
+        return logFiles;
+    }
+
+    /**
+     * Shutdown LogUtils
      */
     public void shutdown() {
         try {
-            info(TAG, "Shutting down LogUtils");
-            
-            if (scheduledExecutor != null) {
-                scheduledExecutor.shutdown();
-                scheduledExecutor.awaitTermination(5, TimeUnit.SECONDS);
+            if (currentLogWriter != null) {
+                currentLogWriter.close();
+                currentLogWriter = null;
             }
-            
-            if (logExecutor != null) {
-                logExecutor.shutdown();
-                logExecutor.awaitTermination(5, TimeUnit.SECONDS);
-            }
-            
-            if (loggerContext != null) {
-                loggerContext.stop();
-            }
-            
-            // Save final statistics
-            updateStatistics();
-            
+
+            executorService.shutdown();
+            logInfo(TAG, "LogUtils shutdown completed");
         } catch (Exception e) {
-            Log.e(TAG, "Error during shutdown", e);
+            logError(TAG, "Error during shutdown", e);
         }
     }
-}
-==== END FILE: Axiom/app/src/main/java/com/axiomloader/utils/LogUtils.java ====
 
-==== BEGIN FILE: Axiom/app/src/main/jni/Android.mk ====
+    /**
+     * Generate log report
+     */
+    public String generateLogReport() {
+        StringBuilder report = new StringBuilder();
+        Map<String, Object> stats = getLogStatistics();
+
+        report.append("=== AXIOM LOG SYSTEM REPORT ===\n");
+        report.append("Generated: ").append(dateFormat.format(new Date())).append("\n\n");
+
+        report.append("GENERAL STATISTICS:\n");
+        report.append("- Total logs: ").append(stats.get("total_logs")).append("\n");
+        report.append("- Active tags: ").append(stats.get("active_tags")).append("\n");
+        report.append("- Recent logs in memory: ").append(stats.get("recent_logs_count")).append("\n");
+        report.append("- Current file size: ").append(stats.get("current_file_size")).append(" bytes\n\n");
+
+        report.append("SYSTEM STATUS:\n");
+        report.append("- Memory usage: ").append(stats.get("memory_usage_mb")).append(" MB\n");
+        report.append("- Battery level: ").append(stats.get("battery_level")).append("%\n");
+        report.append("- Available storage: ").append(stats.get("available_storage_gb")).append(" GB\n");
+        report.append("- Network status: ").append(stats.get("network_status")).append("\n\n");
+
+        report.append("CONFIGURATION:\n");
+        report.append("- File logging: ").append(fileLoggingEnabled ? "Enabled" : "Disabled").append("\n");
+        report.append("- Compression: ").append(compressionEnabled ? "Enabled" : "Disabled").append("\n");
+        report.append("- Encryption: ").append(encryptionEnabled ? "Enabled" : "Disabled").append("\n");
+        report.append("- Crash reporting: ").append(crashReportingEnabled ? "Enabled" : "Disabled").append("\n");
+        report.append("- Performance monitoring: ").append(performanceMonitoringEnabled ? "Enabled" : "Disabled").append("\n");
+        report.append("- Auto cleanup: ").append(autoCleanupEnabled ? "Enabled" : "Disabled").append("\n");
+
+        return report.toString();
+    }
+}
+
+
+// File: Axiom/app/src/main/jni/Android.mk
+
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -2455,16 +3001,16 @@ LOCAL_MODULE    := tomaslib
 LOCAL_SRC_FILES := tomaslib.cpp
 
 include $(BUILD_SHARED_LIBRARY)
-==== END FILE: Axiom/app/src/main/jni/Android.mk ====
 
-==== BEGIN FILE: Axiom/app/src/main/jni/Application.mk ====
+// File: Axiom/app/src/main/jni/Application.mk
+
 APP_ABI := all
 APP_PLATFORM := android-21
 APP_STL := c++_shared
 APP_CPPFLAGS += -std=c++17
-==== END FILE: Axiom/app/src/main/jni/Application.mk ====
 
-==== BEGIN FILE: Axiom/app/src/main/jni/tomaslib.cpp ====
+// File: Axiom/app/src/main/jni/tomaslib.cpp
+
 #include <jni.h>
 #include <string>
 #include "tomaslib.h"
@@ -2493,9 +3039,9 @@ Java_com_axiomloader_MainActivity_initTomasLib(
     // Initialize TomasLib native library
     // Add your initialization code here
 }
-==== END FILE: Axiom/app/src/main/jni/tomaslib.cpp ====
 
-==== BEGIN FILE: Axiom/app/src/main/jni/tomaslib.h ====
+// File: Axiom/app/src/main/jni/tomaslib.h
+
 #ifndef TOMASLIB_H
 #define TOMASLIB_H
 
@@ -2534,9 +3080,9 @@ Java_com_axiomloader_MainActivity_initTomasLib(JNIEnv* env, jobject thiz);
 #endif
 
 #endif // TOMASLIB_H
-==== END FILE: Axiom/app/src/main/jni/tomaslib.h ====
 
-==== BEGIN FILE: Axiom/app/src/main/res/drawable/ic_launcher_background.xml ====
+// File: Axiom/app/src/main/res/drawable/ic_launcher_background.xml
+
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -2708,9 +3254,9 @@ Java_com_axiomloader_MainActivity_initTomasLib(JNIEnv* env, jobject thiz);
         android:strokeColor="#33FFFFFF" />
 </vector>
 
-==== END FILE: Axiom/app/src/main/res/drawable/ic_launcher_background.xml ====
 
-==== BEGIN FILE: Axiom/app/src/main/res/drawable-v24/ic_launcher_foreground.xml ====
+// File: Axiom/app/src/main/res/drawable-v24/ic_launcher_foreground.xml
+
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
@@ -2741,1070 +3287,920 @@ Java_com_axiomloader_MainActivity_initTomasLib(JNIEnv* env, jobject thiz);
         android:strokeWidth="1"
         android:strokeColor="#00000000" />
 </vector>
-==== END FILE: Axiom/app/src/main/res/drawable-v24/ic_launcher_foreground.xml ====
 
-==== BEGIN FILE: Axiom/app/src/main/res/layout/activity_logging.xml ====
+// File: Axiom/app/src/main/res/layout/activity_logging.xml
+
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/background_dark"
     tools:context=".ui.LoggingActivity">
 
-    <!-- Progress Bar -->
-    <ProgressBar
-        android:id="@+id/progress_bar"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="4dp"
-        android:visibility="gone"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:progressTint="@color/axiom_blue" />
+        android:layout_height="wrap_content">
 
-    <!-- Main Control Buttons -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="4dp"
-        android:gravity="center">
-
-        <Button
-            android:id="@+id/btn_clear_logs"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:layout_margin="2dp"
-            android:text="@string/btn_clear_logs"
-            android:textSize="10sp"
-            android:background="#dc3545"
-            android:textColor="@color/white" />
-
-        <Button
-            android:id="@+id/btn_refresh_logs"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:layout_margin="2dp"
-            android:text="@string/btn_refresh_logs"
-            android:textSize="10sp"
-            android:background="@color/success_green"
-            android:textColor="#ffffff" />
-
-        <Button
-            android:id="@+id/btn_pause_logs"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:layout_margin="2dp"
-            android:text="@string/btn_pause_logs"
-            android:textSize="10sp"
-            android:background="#ffc107"
-            android:textColor="#000000" />
-
-        <Button
-            android:id="@+id/btn_export_logs"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:layout_margin="2dp"
-            android:text="@string/btn_export_logs"
-            android:textSize="10sp"
-            android:background="#007acc"
-            android:textColor="#ffffff" />
-
-    </LinearLayout>
-
-    <!-- Secondary Control Buttons -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="4dp"
-        android:gravity="center">
-
-        <Button
-            android:id="@+id/btn_generate_test_logs"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:layout_margin="2dp"
-            android:text="@string/btn_generate_test_logs"
-            android:textSize="10sp"
-            android:background="#6f42c1"
-            android:textColor="#ffffff" />
-
-        <Button
-            android:id="@+id/btn_settings"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:layout_margin="2dp"
-            android:text="@string/btn_settings"
-            android:textSize="10sp"
-            android:background="#fd7e14"
-            android:textColor="#ffffff" />
-
-        <Button
-            android:id="@+id/btn_stats"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:layout_margin="2dp"
-            android:text="Statistics"
-            android:textSize="10sp"
-            android:background="#20c997"
-            android:textColor="#ffffff" />
-
-    </LinearLayout>
-
-    <!-- Compact Filters Section -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@color/background_medium"
-        android:padding="8dp"
-        android:layout_margin="4dp">
-
-        <!-- Search Box -->
-        <EditText
-            android:id="@+id/et_search_logs"
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:hint="@string/hint_search_logs"
-            android:textColor="#ffffff"
-            android:textColorHint="#cccccc"
-            android:background="#3a3a3a"
-            android:padding="8dp"
-            android:textSize="13sp"
-            android:layout_marginBottom="4dp" />
+            android:layout_height="?attr/actionBarSize"
+            app:title="Advanced Logging System" />
 
-        <!-- Filter Spinners -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="4dp">
+    </com.google.android.material.appbar.AppBarLayout>
 
-            <Spinner
-                android:id="@+id/spinner_log_level"
-                android:layout_width="0dp"
-                android:layout_height="36dp"
-                android:layout_weight="1"
-                android:layout_margin="1dp"
-                android:background="#3a3a3a" />
-
-            <Spinner
-                android:id="@+id/spinner_thread_filter"
-                android:layout_width="0dp"
-                android:layout_height="36dp"
-                android:layout_weight="1"
-                android:layout_margin="1dp"
-                android:background="#3a3a3a" />
-
-            <Spinner
-                android:id="@+id/spinner_logger_filter"
-                android:layout_width="0dp"
-                android:layout_height="36dp"
-                android:layout_weight="1"
-                android:layout_margin="1dp"
-                android:background="#3a3a3a" />
-
-        </LinearLayout>
-
-        <!-- Filter Options -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <CheckBox
-                android:id="@+id/cb_regex_search"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/regex_search"
-                android:textColor="@color/white"
-                android:textSize="10sp" />
-
-            <CheckBox
-                android:id="@+id/cb_case_sensitive"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/case_sensitive"
-                android:textColor="#ffffff"
-                android:textSize="10sp" />
-
-            <CheckBox
-                android:id="@+id/cb_auto_scroll"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/btn_auto_scroll"
-                android:textColor="#ffffff"
-                android:textSize="10sp" />
-
-            <CheckBox
-                android:id="@+id/cb_real_time_logging"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Real-time"
-                android:textColor="#ffffff"
-                android:textSize="10sp" />
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-    <!-- Collapsible sections in a small scrollable area -->
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="0"
-        android:maxHeight="200dp"
-        android:nestedScrollingEnabled="false">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <!-- Statistics Container (Initially Hidden) -->
-            <LinearLayout
-                android:id="@+id/stats_container"
+            <!-- System Status Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="#2a2a2a"
-                android:padding="8dp"
-                android:layout_margin="4dp"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Log Statistics"
-                    android:textColor="#ffffff"
-                    android:textStyle="bold"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="4dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/tv_total_logs"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/stats_total_logs"
-                        android:textColor="#ffffff"
-                        android:textSize="11sp"
-                        android:padding="2dp" />
-
-                    <TextView
-                        android:id="@+id/tv_error_count"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/stats_error_count"
-                        android:textColor="#ff6b6b"
-                        android:textSize="11sp"
-                        android:padding="2dp" />
-
-                    <TextView
-                        android:id="@+id/tv_warn_count"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/stats_warn_count"
-                        android:textColor="#ffd93d"
-                        android:textSize="11sp"
-                        android:padding="2dp" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/tv_file_size"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/stats_file_size"
-                        android:textColor="#ffffff"
-                        android:textSize="11sp"
-                        android:padding="2dp" />
-
-                    <TextView
-                        android:id="@+id/tv_oldest_log"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/stats_oldest_log"
-                        android:textColor="#cccccc"
-                        android:textSize="11sp"
-                        android:padding="2dp" />
-
-                    <TextView
-                        android:id="@+id/tv_newest_log"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/stats_newest_log"
-                        android:textColor="#cccccc"
-                        android:textSize="11sp"
-                        android:padding="2dp" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- Settings Container (Initially Hidden) -->
-            <LinearLayout
-                android:id="@+id/settings_container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="#2a2a2a"
-                android:padding="8dp"
-                android:layout_margin="4dp"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/log_settings_title"
-                    android:textColor="#ffffff"
-                    android:textStyle="bold"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="4dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/setting_color_coding"
-                        android:textColor="#ffffff"
-                        android:textSize="12sp" />
-
-                    <Switch
-                        android:id="@+id/switch_color_coding"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/setting_dark_theme"
-                        android:textColor="#ffffff"
-                        android:textSize="12sp" />
-
-                    <Switch
-                        android:id="@+id/switch_dark_theme"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                </LinearLayout>
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginTop="4dp">
+                    android:padding="16dp">
 
                     <TextView
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/setting_buffer_size"
-                        android:textColor="#ffffff"
-                        android:textSize="12sp" />
+                        android:text="System Status"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
 
-                    <SeekBar
-                        android:id="@+id/seekbar_buffer_size"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:max="100"
-                        android:progress="50" />
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_memory_usage"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Memory: --"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/tv_cpu_usage"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="CPU: --"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/tv_battery_level"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Battery: --"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_network_status"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Network: --"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/tv_storage_available"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Storage: --"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/tv_active_tags"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Tags: --"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
-            </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Quick Actions Container -->
-            <LinearLayout
-                android:id="@+id/filters_container"
+            <!-- Custom Log Input Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="#2a2a2a"
-                android:padding="8dp"
-                android:layout_margin="4dp"
-                android:visibility="visible">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Quick Actions"
-                    android:textColor="#ffffff"
-                    android:textStyle="bold"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                    <Button
-                        android:layout_width="0dp"
-                        android:layout_height="32dp"
-                        android:layout_weight="1"
-                        android:layout_margin="1dp"
-                        android:text="Copy All"
-                        android:textSize="10sp"
-                        android:background="#17a2b8"
-                        android:textColor="#ffffff"
-                        android:onClick="copyAllLogs" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Send Custom Log"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
 
-                    <Button
-                        android:layout_width="0dp"
-                        android:layout_height="32dp"
-                        android:layout_weight="1"
-                        android:layout_margin="1dp"
-                        android:text="Share"
-                        android:textSize="10sp"
-                        android:background="#6c757d"
-                        android:textColor="#ffffff"
-                        android:onClick="shareCurrentLogs" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
 
-                    <Button
-                        android:layout_width="0dp"
-                        android:layout_height="32dp"
-                        android:layout_weight="1"
-                        android:layout_margin="1dp"
-                        android:text="Bookmark"
-                        android:textSize="10sp"
-                        android:background="#e83e8c"
-                        android:textColor="#ffffff"
-                        android:onClick="bookmarkCurrentView" />
+                        <Spinner
+                            android:id="@+id/spinner_custom_log_level"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="8dp" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="Tag">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_log_tag"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="text"
+                                android:maxLines="1" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/log_message_hint"
+                        android:layout_marginBottom="12dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_log_message"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textMultiLine"
+                            android:minLines="2"
+                            android:maxLines="4" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_send_log"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/send_log"
+                        app:cornerRadius="8dp" />
 
                 </LinearLayout>
 
-            </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Controls Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Controls"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_refresh"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:text="Refresh"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_clear_logs"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:layout_marginEnd="4dp"
+                            android:text="@string/clear_logs"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_export_logs"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:text="@string/export_logs"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_settings"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:text="@string/log_settings"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_stats"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:layout_marginEnd="4dp"
+                            android:text="Statistics"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_performance_test"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:text="Perf Test"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_generate_test_logs"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Generate Test Logs"
+                        style="@style/Widget.Material3.Button.TonalButton" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Filters Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Filters &amp; Search"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/search_logs"
+                        android:layout_marginBottom="12dp"
+                        app:startIconDrawable="@android:drawable/ic_search_category_default">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_search_logs"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:maxLines="1" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginEnd="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Log Level"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <Spinner
+                                android:id="@+id/spinner_log_level"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Tag"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <Spinner
+                                android:id="@+id/spinner_tag"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Log Count Info Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="12dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tv_log_count"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Total Logs: 0"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_filtered_count"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Filtered: 0"
+                        android:textSize="14sp"
+                        android:gravity="center" />
+
+                    <ProgressBar
+                        android:id="@+id/progress_bar"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:visibility="gone"
+                        style="?android:attr/progressBarStyleSmall" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Logs RecyclerView Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="600dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp"
+                        android:background="?attr/colorSurface"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Log Entries"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:text="Auto Scroll"
+                            android:textSize="12sp"
+                            android:minWidth="0dp"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            style="@style/Widget.Material3.Button.TonalButton" />
+
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recycler_view_logs"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="8dp"
+                        android:scrollbars="vertical"
+                        android:fadeScrollbars="false"
+                        tools:listitem="@layout/item_log_entry" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
-    <!-- Log Display Header -->
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+// File: Axiom/app/src/main/res/layout/activity_main.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+        
+    <com.google.android.material.appbar.AppBarLayout        
+        android:id="@+id/appbar"        
+        android:layout_width="match_parent"        
+        android:layout_height="wrap_content">
+            
+        <com.google.android.material.appbar.MaterialToolbar            
+            android:id="@+id/toolbar"            
+            android:layout_width="match_parent"            
+            android:layout_height="?attr/actionBarSize" />
+            
+    </com.google.android.material.appbar.AppBarLayout>    
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp" />
+            
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Advanced Logging System"
+            android:textSize="16sp"
+            android:alpha="0.7"
+            android:layout_marginBottom="48dp" />
+        
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/logs_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/open_logs"
+            android:textSize="18sp"
+            android:padding="16dp"
+            app:cornerRadius="12dp"
+            style="@style/Widget.Material3.Button.UnelevatedButton" />
+            
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+// File: Axiom/app/src/main/res/layout/dialog_log_settings.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
     <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Configure Logging Settings"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_file_logging"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Live Log Display"
-        android:textColor="#ffffff"
-        android:textStyle="bold"
-        android:textSize="14sp"
-        android:layout_margin="4dp"
-        android:gravity="center" />
+        android:text="@string/enable_file_logging"
+        android:layout_marginBottom="8dp" />
 
-    <!-- Main Log Display Area - INDEPENDENT SCROLLING -->
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipe_refresh_layout"
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_compression"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_margin="4dp">
+        android:layout_height="wrap_content"
+        android:text="@string/log_compression"
+        android:layout_marginBottom="8dp" />
 
-        <ScrollView
-            android:id="@+id/scroll_log_display"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#1f1f1f"
-            android:padding="8dp"
-            android:scrollbars="vertical"
-            android:fadeScrollbars="false"
-            android:scrollbarStyle="outsideOverlay">
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_encryption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/log_encryption"
+        android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:id="@+id/tv_log_display"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Initializing advanced logging system...\n\nReal-time logs will appear here automatically\n\nClick 'GENERATE TEST' to create sample logs\n\nUse filters above to search and organize logs\n\nColor coding is enabled by default"
-                android:textColor="#ffffff"
-                android:textSize="12sp"
-                android:fontFamily="monospace"
-                android:textIsSelectable="true"
-                android:padding="8dp"
-                android:lineSpacingExtra="4dp"
-                android:lineSpacingMultiplier="1.2" />
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_crash_reporting"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_crash_reporting"
+        android:layout_marginBottom="8dp" />
 
-        </ScrollView>
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_performance_monitoring"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Performance Monitoring"
+        android:layout_marginBottom="8dp" />
 
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_auto_cleanup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/auto_delete_old_logs"
+        android:layout_marginBottom="8dp" />
 
-    <!-- Footer Status Bar -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Advanced Settings"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="#333333"
-        android:padding="6dp"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/max_log_files" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="10"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:gravity="center_vertical">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Axiom Advanced Logging System v2.0"
-            android:textColor="#cccccc"
-            android:textSize="10sp"
-            android:gravity="start" />
+            android:text="@string/log_file_size" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Log4j2 Enhanced"
-            android:textColor="#007acc"
-            android:textSize="10sp"
+            android:text="5 MB"
             android:textStyle="bold" />
 
     </LinearLayout>
 
 </LinearLayout>
-==== END FILE: Axiom/app/src/main/res/layout/activity_logging.xml ====
 
-==== BEGIN FILE: Axiom/app/src/main/res/layout/activity_main.xml ====
+
+// File: Axiom/app/src/main/res/layout/item_log_entry.xml
+
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp"
-    android:background="@color/background_dark"
-    tools:context=".MainActivity">
-
-    <!-- App Title -->
-    <TextView
-        android:id="@+id/tv_app_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/main_title"
-        android:textSize="32sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_primary"
-        android:layout_marginBottom="48dp"
-        android:gravity="center" />
-
-    <!-- Axiom Logo Text -->
-    <TextView
-        android:id="@+id/tv_axiom_logo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="AXIOM"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="@color/axiom_cyan"
-        android:layout_marginBottom="32dp"
-        android:gravity="center" />
-
-    <!-- Main Container for Button -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="@color/background_medium"
-        android:padding="32dp"
-        android:layout_marginBottom="32dp">
-
-        <!-- Logs Button -->
-        <Button
-            android:id="@+id/btn_logs"
-            android:layout_width="280dp"
-            android:layout_height="60dp"
-            android:text="@string/logs_button"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:background="@color/axiom_blue"
-            android:layout_marginBottom="16dp"
-            android:elevation="4dp"
-            android:stateListAnimator="@null" />
-
-        <!-- Button Description -->
-        <TextView
-            android:id="@+id/tv_logs_desc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/logs_button_desc"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary"
-            android:gravity="center"
-            android:layout_marginTop="8dp" />
-
-    </LinearLayout>
-
-    <!-- App Version Info -->
-    <TextView
-        android:id="@+id/tv_version"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="v1.0.0"
-        android:textSize="12sp"
-        android:textColor="@color/text_disabled"
-        android:layout_marginTop="32dp" />
-
-    <!-- Status Bar -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginTop="24dp"
-        android:padding="8dp"
-        android:background="@color/background_light">
-
-        <TextView
-            android:id="@+id/tv_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="System Ready"
-            android:textSize="12sp"
-            android:textColor="@color/success_green"
-            android:layout_weight="1"
-            android:gravity="center" />
-
-        <View
-            android:id="@+id/status_indicator"
-            android:layout_width="8dp"
-            android:layout_height="8dp"
-            android:background="@color/success_green"
-            android:layout_marginStart="8dp" />
-
-    </LinearLayout>
-
-</LinearLayout>
-==== END FILE: Axiom/app/src/main/res/layout/activity_main.xml ====
-
-==== BEGIN FILE: Axiom/app/src/main/res/layout/content_main.xml ====
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:app="http://schemas.android.com/apk/res-auto"
-  android:layout_width="match_parent"
-  android:layout_height="match_parent">
-
-  <TextView
-    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="Hello user!"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent" />
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:background="?attr/selectableItemBackground"
+    android:minHeight="48dp">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
-==== END FILE: Axiom/app/src/main/res/layout/content_main.xml ====
-
-==== BEGIN FILE: Axiom/app/src/main/res/layout/item_log_entry.xml ====
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="12dp"
-    android:background="?android:attr/selectableItemBackground"
-    android:clickable="true"
-    android:focusable="true">
-
-    <!-- Main Log Entry Row -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <!-- Time Column -->
-        <TextView
-            android:id="@+id/tv_time"
-            android:layout_width="80dp"
-            android:layout_height="wrap_content"
-            android:text="12:34:56"
-            android:textSize="10sp"
-            android:textColor="@android:color/darker_gray"
-            android:fontFamily="monospace"
-            android:gravity="center" />
-
-        <!-- Level Column -->
-        <TextView
-            android:id="@+id/tv_level"
-            android:layout_width="50dp"
-            android:layout_height="wrap_content"
-            android:text="INFO"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:fontFamily="monospace"
-            android:gravity="center"
-            android:background="#E3F2FD"
-            android:padding="2dp"
-            android:layout_marginEnd="4dp" />
-
-        <!-- Category Column -->
-        <TextView
-            android:id="@+id/tv_category"
-            android:layout_width="60dp"
-            android:layout_height="wrap_content"
-            android:text="APP"
-            android:textSize="9sp"
-            android:textColor="@android:color/darker_gray"
-            android:fontFamily="monospace"
-            android:gravity="center"
-            android:layout_marginEnd="4dp" />
-
-        <!-- Tag Column -->
-        <TextView
-            android:id="@+id/tv_tag"
-            android:layout_width="80dp"
-            android:layout_height="wrap_content"
-            android:text="MainActivity"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/black"
-            android:fontFamily="monospace"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:layout_marginEnd="8dp" />
-
-        <!-- Message Column -->
-        <TextView
-            android:id="@+id/tv_message"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Application started successfully"
-            android:textSize="12sp"
-            android:textColor="@android:color/black"
-            android:maxLines="2"
-            android:ellipsize="end" />
-
-    </LinearLayout>
-
-    <!-- Metadata Row (Initially Hidden) -->
-    <TextView
-        android:id="@+id/tv_metadata"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="metadata: value1=test, value2=123"
-        android:textSize="10sp"
-        android:textColor="@android:color/darker_gray"
-        android:fontFamily="monospace"
-        android:background="#F5F5F5"
-        android:padding="4dp"
-        android:visibility="gone" />
-
-    <!-- Stack Trace Row (Initially Hidden) -->
-    <TextView
-        android:id="@+id/tv_stack_trace"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="java.lang.Exception: Error message\n\tat com.example.Class.method(Class.java:123)"
-        android:textSize="9sp"
-        android:textColor="@android:color/holo_red_dark"
-        android:fontFamily="monospace"
-        android:background="#FFEBEE"
-        android:padding="4dp"
-        android:visibility="gone"
-        android:scrollHorizontally="true" />
-
-    <!-- Divider -->
+    <!-- Level Indicator -->
     <View
+        android:id="@+id/level_indicator"
+        android:layout_width="4dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="8dp"
+        android:background="#2196F3" />
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="8dp"
-        android:background="#E0E0E0" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Main Log Line -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Timestamp -->
+            <TextView
+                android:id="@+id/tv_timestamp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="12:34:56.789"
+                android:textSize="11sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:fontFamily="monospace"
+                android:layout_marginEnd="8dp"
+                tools:text="12:34:56.789" />
+
+            <!-- Log Level -->
+            <TextView
+                android:id="@+id/tv_level"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="I"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"
+                android:layout_marginEnd="4dp"
+                android:minWidth="16dp"
+                android:gravity="center"
+                tools:text="I" />
+
+            <!-- Separator -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="/"
+                android:textSize="12sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:layout_marginEnd="4dp" />
+
+            <!-- Tag -->
+            <TextView
+                android:id="@+id/tv_tag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TAG"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:maxWidth="80dp"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:layout_marginEnd="8dp"
+                tools:text="MyTag" />
+
+            <!-- Separator -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=":"
+                android:textSize="12sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Message -->
+            <TextView
+                android:id="@+id/tv_message"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Log message here"
+                android:textSize="12sp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:maxLines="3"
+                android:ellipsize="end"
+                tools:text="This is a sample log message that might be quite long and could wrap to multiple lines" />
+
+        </LinearLayout>
+
+        <!-- Additional Info Line (Thread + Location) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp"
+            android:gravity="center_vertical">
+
+            <!-- Thread Info -->
+            <TextView
+                android:id="@+id/tv_thread"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="[main]"
+                android:textSize="10sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:fontFamily="monospace"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone"
+                tools:text="[main]"
+                tools:visibility="visible" />
+
+            <!-- Location Info -->
+            <TextView
+                android:id="@+id/tv_location"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="(MainActivity.onCreate:42)"
+                android:textSize="10sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:fontFamily="monospace"
+                android:ellipsize="start"
+                android:singleLine="true"
+                android:visibility="gone"
+                tools:text="(MainActivity.onCreate:42)"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+    </LinearLayout>
 
 </LinearLayout>
-==== END FILE: Axiom/app/src/main/res/layout/item_log_entry.xml ====
 
-==== BEGIN FILE: Axiom/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml ====
+// File: Axiom/app/src/main/res/menu/logging_menu.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_refresh"
+        android:title="Refresh"
+        android:icon="@android:drawable/ic_menu_rotate"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_clear_search"
+        android:title="Clear Filters"
+        android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        app:showAsAction="ifRoom" />
+
+</menu>
+
+// File: Axiom/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+
 <?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@drawable/ic_launcher_background" />
     <foreground android:drawable="@drawable/ic_launcher_foreground" />
 </adaptive-icon>
-==== END FILE: Axiom/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml ====
 
-==== BEGIN FILE: Axiom/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml ====
+// File: Axiom/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+
 <?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@drawable/ic_launcher_background" />
     <foreground android:drawable="@drawable/ic_launcher_foreground" />
 </adaptive-icon>
-==== END FILE: Axiom/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml ====
 
-==== BEGIN FILE: Axiom/app/src/main/res/values/colors.xml ====
+// File: Axiom/app/src/main/res/values/colors.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<resources></resources>
+
+// File: Axiom/app/src/main/res/values/strings.xml
+
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Primary Colors -->
-    <color name="axiom_blue">#007acc</color>
-    <color name="axiom_blue_dark">#005a99</color>
-    <color name="axiom_cyan">#00d4ff</color>
-    <color name="axiom_cyan_dark">#00a0cc</color>
-    
-    <!-- Background Colors -->
-    <color name="background_dark">#1a1a1a</color>
-    <color name="background_medium">#2a2a2a</color>
-    <color name="background_light">#3a3a3a</color>
-    
-    <!-- Text Colors -->
-    <color name="text_primary">#ffffff</color>
-    <color name="text_secondary">#cccccc</color>
-    <color name="text_disabled">#666666</color>
-    
-    <!-- Status Colors -->
-    <color name="success_green">#28a745</color>
-    <color name="warning_yellow">#ffc107</color>
-    <color name="danger_red">#dc3545</color>
-    <color name="info_blue">#17a2b8</color>
-    
-    <!-- Log Level Colors -->
-    <color name="log_error">#ff6b6b</color>
-    <color name="log_warn">#ffd93d</color>
-    <color name="log_info">#6bcf7f</color>
-    <color name="log_debug">#4d96ff</color>
-    <color name="log_trace">#9b59b6</color>
-    
-    <!-- Button Colors -->
-    <color name="button_clear">#dc3545</color>
-    <color name="button_refresh">#28a745</color>
-    <color name="button_pause">#ffc107</color>
-    <color name="button_export">#007acc</color>
-    <color name="button_generate">#6f42c1</color>
-    <color name="button_settings">#fd7e14</color>
-    <color name="button_stats">#20c997</color>
-    <color name="button_action">#17a2b8</color>
-    <color name="button_secondary">#6c757d</color>
-    <color name="button_bookmark">#e83e8c</color>
-    
-    <!-- Standard Material Colors -->
-    <color name="black">#000000</color>
-    <color name="white">#ffffff</color>
-    <color name="transparent">#00000000</color>
-</resources>
-==== END FILE: Axiom/app/src/main/res/values/colors.xml ====
-
-==== BEGIN FILE: Axiom/app/src/main/res/values/strings.xml ====
-<resources>
-    <string name="app_name">Axiom Loader</string>
-    <string name="hello_world">Hello World!</string>
-    <string name="action_settings">Settings</string>
-    
-    <!-- Main Activity -->
-    <string name="main_title">Axiom Loader</string>
-    <string name="logs_button">Advanced Logs</string>
-    <string name="logs_button_desc">Access comprehensive logging system</string>
-    
-    <!-- Logging Activity -->
-    <string name="logging_title">Advanced Log System</string>
-    <string name="log_viewer_title">Log Viewer</string>
-    <string name="log_controls_title">Log Controls</string>
-    <string name="log_filters_title">Filters &amp; Search</string>
-    <string name="log_export_title">Export Options</string>
-    <string name="log_settings_title">Log Settings</string>
-    
-    <!-- Log Levels -->
-    <string name="log_level_all">ALL</string>
-    <string name="log_level_trace">TRACE</string>
+    <string name="app_name">Axiom</string>
+    <string name="logging_activity_title">Advanced Logging System</string>
+    <string name="open_logs">Open Logs</string>
+    <string name="log_level_verbose">VERBOSE</string>
     <string name="log_level_debug">DEBUG</string>
     <string name="log_level_info">INFO</string>
     <string name="log_level_warn">WARN</string>
     <string name="log_level_error">ERROR</string>
-    <string name="log_level_fatal">FATAL</string>
-    <string name="log_level_off">OFF</string>
-    
-    <!-- Log Controls -->
-    <string name="btn_clear_logs">Clear Logs</string>
-    <string name="btn_refresh_logs">Refresh</string>
-    <string name="btn_pause_logs">Pause</string>
-    <string name="btn_resume_logs">Resume</string>
-    <string name="btn_auto_scroll">Auto Scroll</string>
-    <string name="btn_search_logs">Search</string>
-    <string name="btn_filter_logs">Filter</string>
-    <string name="btn_export_logs">Export</string>
-    <string name="btn_settings">Settings</string>
-    <string name="btn_generate_test_logs">Generate Test Logs</string>
-    
-    <!-- Export Options -->
-    <string name="export_txt">Export as TXT</string>
-    <string name="export_json">Export as JSON</string>
-    <string name="export_xml">Export as XML</string>
-    <string name="export_csv">Export as CSV</string>
-    <string name="export_html">Export as HTML</string>
-    <string name="share_logs">Share Logs</string>
-    
-    <!-- Settings -->
-    <string name="setting_max_log_files">Max Log Files</string>
-    <string name="setting_max_file_size">Max File Size (MB)</string>
-    <string name="setting_log_retention">Log Retention (Days)</string>
-    <string name="setting_buffer_size">Buffer Size</string>
-    <string name="setting_auto_compress">Auto Compress Old Logs</string>
-    <string name="setting_real_time_logging">Real-time Logging</string>
-    <string name="setting_include_stack_trace">Include Stack Traces</string>
-    <string name="setting_log_format">Log Format</string>
-    <string name="setting_color_coding">Color Coding</string>
-    <string name="setting_dark_theme">Dark Theme</string>
-    
-    <!-- Search & Filter -->
-    <string name="hint_search_logs">Search logs...</string>
-    <string name="filter_by_level">Filter by Level</string>
-    <string name="filter_by_date">Filter by Date</string>
-    <string name="filter_by_thread">Filter by Thread</string>
-    <string name="filter_by_logger">Filter by Logger</string>
-    <string name="regex_search">Regex Search</string>
-    <string name="case_sensitive">Case Sensitive</string>
-    
-    <!-- Statistics -->
-    <string name="stats_total_logs">Total Logs</string>
-    <string name="stats_error_count">Error Count</string>
-    <string name="stats_warn_count">Warning Count</string>
-    <string name="stats_file_size">File Size</string>
-    <string name="stats_oldest_log">Oldest Log</string>
-    <string name="stats_newest_log">Newest Log</string>
-    
-    <!-- Messages -->
-    <string name="msg_logs_cleared">Logs cleared successfully</string>
-    <string name="msg_logs_exported">Logs exported successfully</string>
-    <string name="msg_export_failed">Export failed</string>
-    <string name="msg_no_logs_found">No logs found</string>
-    <string name="msg_search_no_results">No search results</string>
-    <string name="msg_copying_to_clipboard">Copying to clipboard...</string>
-    <string name="msg_log_file_created">Log file created</string>
-    <string name="msg_permission_required">Storage permission required</string>
-    
-    <!-- Dialogs -->
-    <string name="dialog_confirm_clear">Confirm Clear Logs</string>
-    <string name="dialog_clear_logs_message">Are you sure you want to clear all logs? This action cannot be undone.</string>
-    <string name="dialog_export_options">Export Options</string>
-    <string name="dialog_log_details">Log Details</string>
-    <string name="dialog_yes">Yes</string>
-    <string name="dialog_no">No</string>
-    <string name="dialog_ok">OK</string>
-    <string name="dialog_cancel">Cancel</string>
-    
-    <!-- Time Formats -->
-    <string name="time_format_full">yyyy-MM-dd HH:mm:ss.SSS</string>
-    <string name="time_format_simple">HH:mm:ss</string>
-    <string name="time_format_date">yyyy-MM-dd</string>
-    
-    <!-- File Names -->
-    <string name="log_file_prefix">axiom_logs</string>
-    <string name="export_file_prefix">exported_logs</string>
+    <string name="log_level_wtf">WTF</string>
+    <string name="log_message_hint">Enter your log message here...</string>
+    <string name="log_tag_hint">Log Tag</string>
+    <string name="send_log">Send Log</string>
+    <string name="clear_logs">Clear Logs</string>
+    <string name="export_logs">Export Logs</string>
+    <string name="filter_logs">Filter Logs</string>
+    <string name="search_logs">Search Logs</string>
+    <string name="log_settings">Log Settings</string>
+    <string name="enable_file_logging">Enable File Logging</string>
+    <string name="enable_crash_reporting">Enable Crash Reporting</string>
+    <string name="max_log_files">Max Log Files</string>
+    <string name="log_file_size">Log File Size (MB)</string>
+    <string name="auto_delete_old_logs">Auto Delete Old Logs</string>
+    <string name="log_format">Log Format</string>
+    <string name="timestamp_format">Timestamp Format</string>
+    <string name="enable_colors">Enable Colors</string>
+    <string name="enable_threading">Enable Threading Info</string>
+    <string name="enable_stacktrace">Enable Stack Trace</string>
+    <string name="log_compression">Enable Log Compression</string>
+    <string name="log_encryption">Enable Log Encryption</string>
+    <string name="logs_exported_successfully">Logs exported successfully</string>
+    <string name="logs_cleared_successfully">Logs cleared successfully</string>
+    <string name="no_logs_found">No logs found</string>
+    <string name="log_file_created">Log file created: %1$s</string>
+    <string name="crash_detected">Crash detected and logged</string>
+    <string name="memory_usage">Memory Usage: %1$s MB</string>
+    <string name="cpu_usage">CPU Usage: %1$s%%</string>
+    <string name="battery_level">Battery: %1$s%%</string>
+    <string name="network_status">Network: %1$s</string>
+    <string name="storage_available">Storage: %1$s GB available</string>
 </resources>
-==== END FILE: Axiom/app/src/main/res/values/strings.xml ====
 
-==== BEGIN FILE: Axiom/app/src/main/res/values/themes.xml ====
-<?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
-    
-    <!-- Base application theme -->
-    <style name="Theme.AxiomLoader" parent="Theme.AppCompat.DayNight.DarkActionBar">
-        <!-- Primary brand color -->
-        <item name="colorPrimary">@color/axiom_blue</item>
-        <item name="colorPrimaryVariant">@color/axiom_blue_dark</item>
-        <item name="colorOnPrimary">@color/white</item>
-        
-        <!-- Secondary brand color -->
-        <item name="colorSecondary">@color/axiom_cyan</item>
-        <item name="colorSecondaryVariant">@color/axiom_cyan_dark</item>
-        <item name="colorOnSecondary">@color/black</item>
-        
-        <!-- Status bar color -->
-        <item name="android:statusBarColor" tools:targetApi="l">@color/background_dark</item>
-        
-        <!-- Background colors -->
-        <item name="android:windowBackground">@color/background_dark</item>
-        <item name="colorSurface">@color/background_medium</item>
-        <item name="colorOnSurface">@color/white</item>
-        
-        <!-- Action bar -->
-        <item name="colorPrimaryDark">@color/background_dark</item>
-        <item name="actionBarStyle">@style/ActionBarStyle</item>
-        
-        <!-- Text colors -->
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-        
-        <!-- Button style -->
-        <item name="buttonStyle">@style/ButtonStyle</item>
-    </style>
-    
-    <!-- Action Bar Style -->
-    <style name="ActionBarStyle" parent="Widget.AppCompat.ActionBar.Solid">
-        <item name="background">@color/background_dark</item>
-        <item name="titleTextStyle">@style/ActionBarTitleTextStyle</item>
-    </style>
-    
-    <!-- Action Bar Title Text Style -->
-    <style name="ActionBarTitleTextStyle" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-    
-    <!-- Button Style -->
-    <style name="ButtonStyle" parent="Widget.AppCompat.Button">
-        <item name="android:background">@color/axiom_blue</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:padding">12dp</item>
-        <item name="android:layout_margin">4dp</item>
-    </style>
-    
-    <!-- EditText Style -->
-    <style name="EditTextStyle" parent="Widget.AppCompat.EditText">
-        <item name="android:background">@color/background_light</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textColorHint">@color/text_secondary</item>
-        <item name="android:padding">8dp</item>
-    </style>
-    
-    <!-- Spinner Style -->
-    <style name="SpinnerStyle" parent="Widget.AppCompat.Spinner">
-        <item name="android:background">@color/background_light</item>
-        <item name="android:layout_margin">2dp</item>
-    </style>
+// File: Axiom/app/src/main/res/values/themes.xml
 
-</resources>
-==== END FILE: Axiom/app/src/main/res/values/themes.xml ====
-
-==== BEGIN FILE: Axiom/app/src/main/res/values-night/colors.xml ====
-<?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
-==== END FILE: Axiom/app/src/main/res/values-night/colors.xml ====
-
-==== BEGIN FILE: Axiom/app/src/main/res/values-night/themes.xml ====
 <resources xmlns:tools="http://schemas.android.com/tools">
   <!-- Base application theme. -->
   <style name="Base.AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
@@ -3814,230 +4210,83 @@ Java_com_axiomloader_MainActivity_initTomasLib(JNIEnv* env, jobject thiz);
 
   <style name="AppTheme" parent="Base.AppTheme" />
 </resources>
-==== END FILE: Axiom/app/src/main/res/values-night/themes.xml ====
 
-==== BEGIN FILE: Axiom/app/src/main/res/xml/backup_rules.xml ====
+// File: Axiom/app/src/main/res/values-night/colors.xml
+
 <?xml version="1.0" encoding="utf-8"?>
+<resources></resources>
+
+// File: Axiom/app/src/main/res/values-night/themes.xml
+
+<resources xmlns:tools="http://schemas.android.com/tools">
+  <!-- Base application theme. -->
+  <style name="Base.AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Customize your theme here. -->
+    <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+  </style>
+
+  <style name="AppTheme" parent="Base.AppTheme" />
+</resources>
+
+// File: Axiom/app/src/main/res/xml/backup_rules.xml
+
+<?xml version="1.0" encoding="utf-8"?><!--
+   Sample backup rules file; uncomment and customize as necessary.
+   See https://developer.android.com/guide/topics/data/autobackup
+   for details.
+   Note: This file is ignored for devices older that API 31
+   See https://developer.android.com/about/versions/12/backup-restore
+-->
 <full-backup-content>
-    <!-- Include log files in backup -->
-    <include domain="external" path="axiom_logs/" />
-    
-    <!-- Include app preferences -->
-    <include domain="sharedpref" path="." />
-    
-    <!-- Exclude temporary files -->
-    <exclude domain="cache" path="." />
-    <exclude domain="external" path="temp/" />
+  <!--
+   <include domain="sharedpref" path="."/>
+   <exclude domain="sharedpref" path="device.xml"/>
+-->
 </full-backup-content>
-==== END FILE: Axiom/app/src/main/res/xml/backup_rules.xml ====
 
-==== BEGIN FILE: Axiom/app/src/main/res/xml/data_extraction_rules.xml ====
-<?xml version="1.0" encoding="utf-8"?>
+// File: Axiom/app/src/main/res/xml/data_extraction_rules.xml
+
+<?xml version="1.0" encoding="utf-8"?><!--
+   Sample data extraction rules file; uncomment and customize as necessary.
+   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
+   for details.
+-->
 <data-extraction-rules>
-    <cloud-backup>
-        <!-- Include log files in cloud backup -->
-        <include domain="external" path="axiom_logs/" />
-        
-        <!-- Include preferences -->
-        <include domain="sharedpref" path="." />
-        
-        <!-- Exclude sensitive data -->
-        <exclude domain="external" path="sensitive/" />
-    </cloud-backup>
-    
+  <cloud-backup>
+    <!-- TODO: Use <include> and <exclude> to control what is backed up.
+        <include .../>
+        <exclude .../>
+        -->
+  </cloud-backup>
+  <!--
     <device-transfer>
-        <!-- Include essential data for device transfer -->
-        <include domain="sharedpref" path="." />
-        <include domain="external" path="axiom_logs/" />
+        <include .../>
+        <exclude .../>
     </device-transfer>
+    -->
 </data-extraction-rules>
-==== END FILE: Axiom/app/src/main/res/xml/data_extraction_rules.xml ====
 
-==== BEGIN FILE: Axiom/app/src/main/res/xml/file_provider_paths.xml ====
+// File: Axiom/app/src/main/res/xml/file_paths.xml
+
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- External files directory for log files -->
-    <external-files-path name="axiom_logs" path="axiom_logs/" />
-    
-    <!-- External cache directory for temporary files -->
-    <external-cache-path name="axiom_cache" path="/" />
-    
-    <!-- Internal files directory -->
-    <files-path name="axiom_internal" path="axiom_logs/" />
-    
-    <!-- External storage root -->
-    <external-path name="external_storage_root" path="." />
-    
-    <!-- Downloads directory -->
-    <external-path name="downloads" path="Download/" />
+    <external-files-path
+        name="axiom_logs"
+        path="axiom_logs/" />
+    <external-files-path
+        name="exports"
+        path="exports/" />
+    <files-path
+        name="internal_logs"
+        path="axiom_logs/" />
 </paths>
-==== END FILE: Axiom/app/src/main/res/xml/file_provider_paths.xml ====
 
-==== BEGIN FILE: Axiom/build.gradle ====
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-plugins {
-    id 'com.android.application' version '8.9.1' apply false
-    id 'com.android.library' version '8.9.1' apply false
-         
-}
+// File: Axiom/gradle/wrapper/gradle-wrapper.properties
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
-}
-==== END FILE: Axiom/build.gradle ====
-
-==== BEGIN FILE: Axiom/gradle/wrapper/gradle-wrapper.properties ====
 distributionBase=GRADLE_USER_HOME
 distributionPath=wrapper/dists
 distributionUrl=https\://services.gradle.org/distributions/gradle-8.11.1-bin.zip
 networkTimeout=10000
 zipStoreBase=GRADLE_USER_HOME
 zipStorePath=wrapper/dists
-==== END FILE: Axiom/gradle/wrapper/gradle-wrapper.properties ====
-
-==== BEGIN FILE: Axiom/gradle.properties ====
-# Project-wide Gradle settings.
-# IDE (e.g. Android Studio) users:
-# Gradle settings configured through the IDE *will override*
-# any settings specified in this file.
-# For more details on how to configure your build environment visit
-# http://www.gradle.org/docs/current/userguide/build_environment.html
-# Specifies the JVM arguments used for the daemon process.
-# The setting is particularly useful for tweaking memory settings.
-org.gradle.jvmargs=-Xmx512m -Dfile.encoding=UTF-8
-# When configured, Gradle will run in incubating parallel mode.
-# This option should only be used with decoupled projects. More details, visit
-# http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects
-# org.gradle.parallel=true
-# AndroidX package structure to make it clearer which packages are bundled with the
-# Android operating system, and which are packaged with your app"s APK
-# https://developer.android.com/topic/libraries/support-library/androidx-rn
-android.useAndroidX=true
-# Kotlin code style for this project: "official" or "obsolete":
-kotlin.code.style=official
-# Enables namespacing of each library's R class so that its R class includes only the
-# resources declared in the library itself and none from the library's dependencies,
-# thereby reducing the size of the R class for that library
-android.nonTransitiveRClass=true
-==== END FILE: Axiom/gradle.properties ====
-
-==== BEGIN FILE: Axiom/gradlew.bat ====
-@rem
-@rem Copyright 2015 the original author or authors.
-@rem
-@rem Licensed under the Apache License, Version 2.0 (the "License");
-@rem you may not use this file except in compliance with the License.
-@rem You may obtain a copy of the License at
-@rem
-@rem      https://www.apache.org/licenses/LICENSE-2.0
-@rem
-@rem Unless required by applicable law or agreed to in writing, software
-@rem distributed under the License is distributed on an "AS IS" BASIS,
-@rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-@rem See the License for the specific language governing permissions and
-@rem limitations under the License.
-@rem
-@rem SPDX-License-Identifier: Apache-2.0
-@rem
-
-@if "%DEBUG%"=="" @echo off
-@rem ##########################################################################
-@rem
-@rem  Gradle startup script for Windows
-@rem
-@rem ##########################################################################
-
-@rem Set local scope for the variables with windows NT shell
-if "%OS%"=="Windows_NT" setlocal
-
-set DIRNAME=%~dp0
-if "%DIRNAME%"=="" set DIRNAME=.
-@rem This is normally unused
-set APP_BASE_NAME=%~n0
-set APP_HOME=%DIRNAME%
-
-@rem Resolve any "." and ".." in APP_HOME to make it shorter.
-for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
-
-@rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
-set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
-
-@rem Find java.exe
-if defined JAVA_HOME goto findJavaFromJavaHome
-
-set JAVA_EXE=java.exe
-%JAVA_EXE% -version >NUL 2>&1
-if %ERRORLEVEL% equ 0 goto execute
-
-echo. 1>&2
-echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH. 1>&2
-echo. 1>&2
-echo Please set the JAVA_HOME variable in your environment to match the 1>&2
-echo location of your Java installation. 1>&2
-
-goto fail
-
-:findJavaFromJavaHome
-set JAVA_HOME=%JAVA_HOME:"=%
-set JAVA_EXE=%JAVA_HOME%/bin/java.exe
-
-if exist "%JAVA_EXE%" goto execute
-
-echo. 1>&2
-echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME% 1>&2
-echo. 1>&2
-echo Please set the JAVA_HOME variable in your environment to match the 1>&2
-echo location of your Java installation. 1>&2
-
-goto fail
-
-:execute
-@rem Setup the command line
-
-set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
-
-
-@rem Execute Gradle
-"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
-
-:end
-@rem End local scope for the variables with windows NT shell
-if %ERRORLEVEL% equ 0 goto mainEnd
-
-:fail
-rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
-rem the _cmd.exe /c_ return code!
-set EXIT_CODE=%ERRORLEVEL%
-if %EXIT_CODE% equ 0 set EXIT_CODE=1
-if not ""=="%GRADLE_EXIT_CONSOLE%" exit %EXIT_CODE%
-exit /b %EXIT_CODE%
-
-:mainEnd
-if "%OS%"=="Windows_NT" endlocal
-
-:omega
-
-==== END FILE: Axiom/gradlew.bat ====
-
-==== BEGIN FILE: Axiom/settings.gradle ====
-pluginManagement {
-  repositories {
-    gradlePluginPortal()
-    google()
-    mavenCentral()
-  }
-}
-
-dependencyResolutionManagement {
-  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-  repositories {
-    google()
-    mavenCentral()
-  }
-}
-
-rootProject.name = "Axiom"
-
-include(":app")
-==== END FILE: Axiom/settings.gradle ====
 
