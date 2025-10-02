@@ -1,5 +1,4 @@
-// File: Axiom/build.gradle
-
+// FILE: Axiom/build.gradle
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     id 'com.android.application' version '8.9.1' apply false
@@ -11,34 +10,20 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-// File: Axiom/gradle.properties
-
-# Project-wide Gradle settings.
-# IDE (e.g. Android Studio) users:
-# Gradle settings configured through the IDE *will override*
-# any settings specified in this file.
-# For more details on how to configure your build environment visit
-# http://www.gradle.org/docs/current/userguide/build_environment.html
-# Specifies the JVM arguments used for the daemon process.
-# The setting is particularly useful for tweaking memory settings.
-org.gradle.jvmargs=-Xmx512m -Dfile.encoding=UTF-8
-# When configured, Gradle will run in incubating parallel mode.
-# This option should only be used with decoupled projects. More details, visit
-# http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects
-# org.gradle.parallel=true
-# AndroidX package structure to make it clearer which packages are bundled with the
-# Android operating system, and which are packaged with your app"s APK
-# https://developer.android.com/topic/libraries/support-library/androidx-rn
-android.useAndroidX=true
-# Kotlin code style for this project: "official" or "obsolete":
-kotlin.code.style=official
-# Enables namespacing of each library's R class so that its R class includes only the
-# resources declared in the library itself and none from the library's dependencies,
-# thereby reducing the size of the R class for that library
+// FILE: Axiom/gradle.properties
+#AndroidIDE: enforce UTF-8 & locale for Gradle daemon
+#Thu Oct 02 04:51:09 GMT 2025
 android.nonTransitiveRClass=true
+kotlin.code.style=official
+systemProp.user.language=en
+systemProp.user.country=US
+systemProp.sun.jnu.encoding=UTF-8
+systemProp.file.encoding=UTF-8
+org.gradle.jvmargs=-Xmx512m -Dfile.encoding\=UTF-8
+android.useAndroidX=true
 
-// File: Axiom/gradlew.bat
 
+// FILE: Axiom/gradlew.bat
 @rem
 @rem Copyright 2015 the original author or authors.
 @rem
@@ -135,8 +120,7 @@ if "%OS%"=="Windows_NT" endlocal
 :omega
 
 
-// File: Axiom/settings.gradle
-
+// FILE: Axiom/settings.gradle
 pluginManagement {
   repositories {
     gradlePluginPortal()
@@ -157,8 +141,7 @@ rootProject.name = "Axiom"
 
 include(":app")
 
-// File: Axiom/app/build.gradle
-
+// FILE: Axiom/app/build.gradle
 plugins {
     id 'com.android.application'
 }
@@ -184,12 +167,21 @@ android {
                 abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64', 'x86'
             }
         }
+        
+        // Plugin system configuration
+        buildConfigField "String", "PLUGIN_DIR", "\"axiom_plugins\""
+        buildConfigField "String", "PLUGIN_MANIFEST", "\"plugin.json\""
+        buildConfigField "int", "PLUGIN_API_VERSION", "1"
     }
 
     buildTypes {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+            debuggable true
         }
     }
 
@@ -206,8 +198,13 @@ android {
     
     buildFeatures {
         viewBinding true
-        // Add this line to explicitly enable BuildConfig generation
         buildConfig true
+    }
+    
+    // Allow reflection for plugin system
+    packagingOptions {
+        pickFirst '**/libc++_shared.so'
+        pickFirst '**/libjsc.so'
     }
 }
 
@@ -227,35 +224,111 @@ dependencies {
     
     // Date/Time utilities
     implementation 'org.apache.commons:commons-lang3:3.12.0'
+    
+    // Plugin System Dependencies
+    implementation 'commons-io:commons-io:2.11.0'
+    implementation 'org.apache.commons:commons-compress:1.21'
+    implementation 'org.jetbrains:annotations:24.0.1'
+    
+    // For DEX file handling
+    implementation 'androidx.multidex:multidex:2.0.1'
+    
+    // For ZIP operations (plugin packages)
+    implementation 'net.lingala.zip4j:zip4j:2.11.5'
+    
+    // For reflection and dynamic loading
+    implementation 'org.reflections:reflections:0.10.2'
+    
+    // For HTTP downloads (plugin updates)
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+    
+    // For XML parsing (plugin manifests)
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.15.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
 }
 
-
-// File: Axiom/app/proguard-rules.pro
-
+// FILE: Axiom/app/proguard-rules.pro
 # Add project specific ProGuard rules here.
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Keep plugin system classes
+-keep class com.axiomloader.modding.** { *; }
+-keep interface com.axiomloader.modding.PluginInterface { *; }
+-keep class * implements com.axiomloader.modding.PluginInterface { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep plugin manifest classes for Gson
+-keepclassmembers class com.axiomloader.modding.PluginManifest { *; }
+-keepclassmembers class com.axiomloader.modding.PluginManifest$* { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep native methods
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
 
-// File: Axiom/app/src/main/AndroidManifest.xml
+# Keep all classes that might be loaded by plugins
+-keepnames class * implements com.axiomloader.modding.PluginInterface
 
+# Preserve line numbers for debugging
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+
+# Keep Timber logging
+-dontwarn timber.log.**
+-keep class timber.log.** { *; }
+
+# Keep Gson classes
+-keepattributes Signature
+-keepattributes *Annotation*
+-dontwarn sun.misc.**
+-keep class com.google.gson.** { *; }
+-keep class * implements com.google.gson.TypeAdapter
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
+
+# Keep Apache Commons
+-dontwarn org.apache.commons.**
+-keep class org.apache.commons.** { *; }
+
+# Keep plugin data classes
+-keep class com.axiomloader.modding.PluginInfo { *; }
+-keep enum com.axiomloader.modding.PluginStatus { *; }
+
+# Preserve reflection for dynamic plugin loading
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+
+# Keep plugin entry points
+-keepclassmembers class * implements com.axiomloader.modding.PluginInterface {
+    public void onLoad(android.content.Context);
+    public void onUnload();
+    public java.lang.String getPluginName();
+    public java.lang.String getPluginVersion();
+    public java.lang.String getPluginDescription();
+    public java.util.Map getPluginInfo();
+}
+
+# Keep classes loaded via reflection
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+
+# AndroidX and Material Design
+-keep class com.google.android.material.** { *; }
+-dontwarn com.google.android.material.**
+
+# ViewBinding
+-keep class * implements androidx.viewbinding.ViewBinding {
+    public static * inflate(android.view.LayoutInflater);
+    public static * bind(android.view.View);
+}
+
+# Keep plugin class loaders
+-keep class dalvik.system.DexClassLoader { *; }
+-keep class dalvik.system.PathClassLoader { *; }
+
+// FILE: Axiom/app/src/main/AndroidManifest.xml
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     
@@ -269,6 +342,10 @@ dependencies {
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.INTERNET" />
+  
     <application 
         android:name=".AxiomApplication"
         android:allowBackup="true" 
@@ -277,7 +354,9 @@ dependencies {
         android:label="@string/app_name" 
         android:supportsRtl="true" 
         android:theme="@style/AppTheme"
-        android:requestLegacyExternalStorage="true">
+        android:requestLegacyExternalStorage="true"
+        android:extractNativeLibs="false"
+        android:usesCleartextTraffic="true">
         
         <activity 
             android:name=".MainActivity" 
@@ -295,6 +374,46 @@ dependencies {
             android:parentActivityName=".MainActivity"
             android:screenOrientation="portrait" />
             
+        <activity
+            android:name=".modding.ModdingActivity"
+            android:exported="false"
+            android:label="@string/modding_activity_title"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop" />
+            
+        <activity
+            android:name=".modding.PluginManagerActivity"
+            android:exported="false"
+            android:label="@string/plugin_manager_title"
+            android:parentActivityName=".modding.ModdingActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".modding.PluginDevelopmentActivity"
+            android:exported="false"
+            android:label="@string/plugin_development"
+            android:parentActivityName=".modding.ModdingActivity"
+            android:screenOrientation="portrait" />
+            
+        <activity
+            android:name=".modding.PluginStoreActivity"
+            android:exported="false"
+            android:label="@string/plugin_store"
+            android:parentActivityName=".modding.ModdingActivity"
+            android:screenOrientation="portrait" />
+            
+        <activity
+            android:name=".modding.PluginSettingsActivity"
+            android:exported="false"
+            android:label="@string/plugin_settings"
+            android:parentActivityName=".modding.ModdingActivity"
+            android:screenOrientation="portrait" />
+        <service
+            android:name=".modding.PluginLoaderService"
+            android:exported="false"
+            android:enabled="true" />
+            
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.axiomloader.fileprovider"
@@ -304,18 +423,34 @@ dependencies {
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+        
+        <provider
+            android:name=".modding.PluginProvider"
+            android:authorities="com.axiomloader.plugins"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+            
     </application>
 </manifest>
 
-// File: Axiom/app/src/main/java/com/axiomloader/AxiomApplication.java
 
+// FILE: Axiom/app/src/main/java/com/axiomloader/AxiomApplication.java
 package com.axiomloader;
 
 import android.app.Application;
+import android.content.Context;
+import android.os.StrictMode;
+import androidx.multidex.MultiDex;
+import androidx.multidex.MultiDexApplication;
 import com.axiomloader.utils.LogUtils;
+import com.axiomloader.modding.PluginManager;
+import com.axiomloader.modding.PluginSystemInitializer;
 import timber.log.Timber;
 
-public class AxiomApplication extends Application {
+public class AxiomApplication extends MultiDexApplication {
+    
+    private PluginManager pluginManager;
+    
     @Override
     public void onCreate() {
         super.onCreate();
@@ -324,19 +459,98 @@ public class AxiomApplication extends Application {
         LogUtils.initialize(this);
 
         // Check for debug build to plant the Timber tree
-        // FIX: Ensure BuildConfig is imported correctly
-        if (com.axiomloader.BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             Timber.plant(new Timber.DebugTree());
+            
+            // Enable StrictMode for debugging
+            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .build());
+            
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .build());
         }
 
-        // You can also use LogUtils directly for logging application lifecycle events
-        LogUtils.logInfo("AxiomApplication", "Application onCreate() called.");
+        // Initialize Plugin System
+        initializePluginSystem();
+
+        // Log application lifecycle events
+        LogUtils.logInfo("AxiomApplication", "Application onCreate() called with Plugin System");
+        LogUtils.logInfo("AxiomApplication", "Plugin Manager initialized: " + (pluginManager != null));
+    }
+    
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this);
+    }
+    
+    private void initializePluginSystem() {
+        try {
+            // Initialize plugin directories and system
+            PluginSystemInitializer initializer = new PluginSystemInitializer(this);
+            initializer.initialize();
+            
+            // Initialize plugin manager
+            pluginManager = PluginManager.getInstance();
+            pluginManager.initialize(this);
+            
+            // Auto-load enabled plugins
+            pluginManager.loadEnabledPlugins();
+            
+            LogUtils.logInfo("AxiomApplication", "Plugin system initialized successfully");
+            
+        } catch (Exception e) {
+            LogUtils.logError("AxiomApplication", "Failed to initialize plugin system", e);
+            Timber.e(e, "Plugin system initialization failed");
+        }
+    }
+    
+    public PluginManager getPluginManager() {
+        return pluginManager;
+    }
+    
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+        
+        // Shutdown plugin system
+        if (pluginManager != null) {
+            pluginManager.shutdown();
+        }
+        
+        LogUtils.logInfo("AxiomApplication", "Application terminated");
+    }
+    
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        
+        // Notify plugin system of low memory
+        if (pluginManager != null) {
+            pluginManager.onLowMemory();
+        }
+        
+        LogUtils.logWarning("AxiomApplication", "Low memory condition detected");
+    }
+    
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        
+        // Let plugin system handle memory trimming
+        if (pluginManager != null) {
+            pluginManager.onTrimMemory(level);
+        }
+        
+        LogUtils.logInfo("AxiomApplication", "Memory trimmed at level: " + level);
     }
 }
 
-
-// File: Axiom/app/src/main/java/com/axiomloader/MainActivity.java
-
+// FILE: Axiom/app/src/main/java/com/axiomloader/MainActivity.java
 package com.axiomloader;
 
 import android.content.Intent;
@@ -344,6 +558,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import com.axiomloader.databinding.ActivityMainBinding;
 import com.axiomloader.ui.LoggingActivity;
+import com.axiomloader.modding.ModdingActivity;
 import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
@@ -365,6 +580,13 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
         
+        // Set up the modding button
+        binding.moddingButton.setOnClickListener(v -> {
+            Timber.i("Opening Modding Activity from MainActivity");
+            Intent intent = new Intent(this, ModdingActivity.class);
+            startActivity(intent);
+        });
+        
         // Log app startup
         Timber.i("MainActivity created successfully");
     }
@@ -377,8 +599,4926 @@ public class MainActivity extends AppCompatActivity {
     }
 }
 
-// File: Axiom/app/src/main/java/com/axiomloader/ui/LogAdapter.java
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/ModdingActivity.java
+package com.axiomloader.modding;
 
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.MenuItem;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import com.axiomloader.R;
+import com.axiomloader.databinding.ActivityModdingBinding;
+import com.axiomloader.utils.LogUtils;
+import timber.log.Timber;
+
+public class ModdingActivity extends AppCompatActivity {
+    
+    private ActivityModdingBinding binding;
+    private PluginManager pluginManager;
+    private static final String TAG = "ModdingActivity";
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        binding = ActivityModdingBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle(R.string.modding_activity_title);
+        }
+        
+        pluginManager = PluginManager.getInstance();
+        
+        setupCards();
+        updatePluginStatus();
+        
+        LogUtils.logInfo(TAG, "ModdingActivity created");
+    }
+    
+    private void setupCards() {
+        // Plugin Manager Card
+        binding.cardPluginManager.setOnClickListener(v -> {
+            LogUtils.logInfo(TAG, "Opening Plugin Manager");
+            Intent intent = new Intent(this, PluginManagerActivity.class);
+            startActivity(intent);
+        });
+        
+        // Plugin Development Card
+        binding.cardPluginDevelopment.setOnClickListener(v -> {
+            LogUtils.logInfo(TAG, "Opening Plugin Development");
+            Intent intent = new Intent(this, PluginDevelopmentActivity.class);
+            startActivity(intent);
+        });
+        
+        // Plugin Store Card
+        binding.cardPluginStore.setOnClickListener(v -> {
+            LogUtils.logInfo(TAG, "Opening Plugin Store");
+            Intent intent = new Intent(this, PluginStoreActivity.class);
+            startActivity(intent);
+        });
+        
+        // Plugin Settings Card
+        binding.cardPluginSettings.setOnClickListener(v -> {
+            LogUtils.logInfo(TAG, "Opening Plugin Settings");
+            Intent intent = new Intent(this, PluginSettingsActivity.class);
+            startActivity(intent);
+        });
+        
+        // System Toggle Switch
+        binding.switchPluginSystem.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (buttonView.isPressed()) { // Only respond to user clicks
+                togglePluginSystem(isChecked);
+            }
+        });
+        
+        // Refresh button
+        binding.btnRefreshPlugins.setOnClickListener(v -> {
+            LogUtils.logInfo(TAG, "Refreshing plugin status");
+            refreshPluginStatus();
+        });
+        
+        // Scan plugins button
+        binding.btnScanPlugins.setOnClickListener(v -> {
+            LogUtils.logInfo(TAG, "Scanning for plugins");
+            scanForPlugins();
+        });
+    }
+    
+    private void updatePluginStatus() {
+        if (pluginManager == null) {
+            pluginManager = PluginManager.getInstance();
+        }
+        
+        new Thread(() -> {
+            try {
+                final boolean systemEnabled = pluginManager.isPluginSystemEnabled();
+                final int totalPlugins = pluginManager.getTotalPluginCount();
+                final int enabledPlugins = pluginManager.getEnabledPluginCount();
+                final int loadedPlugins = pluginManager.getLoadedPluginCount();
+                final String pluginDir = pluginManager.getPluginDirectory().getAbsolutePath();
+                
+                runOnUiThread(() -> {
+                    binding.switchPluginSystem.setChecked(systemEnabled);
+                    binding.tvSystemStatus.setText(systemEnabled ? 
+                        getString(R.string.plugin_system_enabled) : 
+                        getString(R.string.plugin_system_disabled));
+                    
+                    binding.tvTotalPlugins.setText("Total: " + totalPlugins);
+                    binding.tvEnabledPlugins.setText("Enabled: " + enabledPlugins);
+                    binding.tvLoadedPlugins.setText("Loaded: " + loadedPlugins);
+                    binding.tvPluginDirectory.setText("Directory: " + pluginDir);
+                    
+                    // Update card states
+                    updateCardStates(systemEnabled);
+                });
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Error updating plugin status", e);
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Error updating plugin status", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+    
+    private void updateCardStates(boolean systemEnabled) {
+        float alpha = systemEnabled ? 1.0f : 0.5f;
+        boolean enabled = systemEnabled;
+        
+        binding.cardPluginManager.setAlpha(alpha);
+        binding.cardPluginManager.setEnabled(enabled);
+        
+        binding.cardPluginDevelopment.setAlpha(alpha);
+        binding.cardPluginDevelopment.setEnabled(enabled);
+        
+        binding.cardPluginStore.setAlpha(alpha);
+        binding.cardPluginStore.setEnabled(enabled);
+        
+        binding.cardPluginSettings.setAlpha(alpha);
+        binding.cardPluginSettings.setEnabled(enabled);
+    }
+    
+    private void togglePluginSystem(boolean enable) {
+        new Thread(() -> {
+            try {
+                if (enable) {
+                    pluginManager.enablePluginSystem();
+                    LogUtils.logInfo(TAG, "Plugin system enabled");
+                } else {
+                    pluginManager.disablePluginSystem();
+                    LogUtils.logInfo(TAG, "Plugin system disabled");
+                }
+                
+                runOnUiThread(() -> {
+                    Toast.makeText(this, enable ? 
+                        getString(R.string.plugin_system_enabled) : 
+                        getString(R.string.plugin_system_disabled), 
+                        Toast.LENGTH_SHORT).show();
+                    
+                    updatePluginStatus();
+                });
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Error toggling plugin system", e);
+                runOnUiThread(() -> {
+                    binding.switchPluginSystem.setChecked(!enable);
+                    Toast.makeText(this, "Error toggling plugin system", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+    
+    private void refreshPluginStatus() {
+        binding.btnRefreshPlugins.setEnabled(false);
+        binding.btnRefreshPlugins.setText("Refreshing...");
+        
+        new Thread(() -> {
+            try {
+                pluginManager.refreshPlugins();
+                Thread.sleep(500); // Brief delay for user feedback
+                
+                runOnUiThread(() -> {
+                    updatePluginStatus();
+                    binding.btnRefreshPlugins.setEnabled(true);
+                    binding.btnRefreshPlugins.setText("Refresh Status");
+                    Toast.makeText(this, "Plugin status refreshed", Toast.LENGTH_SHORT).show();
+                });
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Error refreshing plugins", e);
+                runOnUiThread(() -> {
+                    binding.btnRefreshPlugins.setEnabled(true);
+                    binding.btnRefreshPlugins.setText("Refresh Status");
+                    Toast.makeText(this, "Error refreshing plugins", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+    
+    private void scanForPlugins() {
+        binding.btnScanPlugins.setEnabled(false);
+        binding.btnScanPlugins.setText("Scanning...");
+        
+        new Thread(() -> {
+            try {
+                int foundPlugins = pluginManager.scanForNewPlugins();
+                
+                runOnUiThread(() -> {
+                    binding.btnScanPlugins.setEnabled(true);
+                    binding.btnScanPlugins.setText("Scan for Plugins");
+                    
+                    String message = foundPlugins > 0 ? 
+                        "Found " + foundPlugins + " new plugins" : 
+                        "No new plugins found";
+                    
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                    
+                    if (foundPlugins > 0) {
+                        updatePluginStatus();
+                    }
+                });
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Error scanning for plugins", e);
+                runOnUiThread(() -> {
+                    binding.btnScanPlugins.setEnabled(true);
+                    binding.btnScanPlugins.setText("Scan for Plugins");
+                    Toast.makeText(this, "Error scanning for plugins", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updatePluginStatus();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        binding = null;
+        LogUtils.logInfo(TAG, "ModdingActivity destroyed");
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginAdapter.java
+package com.axiomloader.modding;
+
+import android.content.Context;
+import android.graphics.Color;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.Switch;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+import com.axiomloader.R;
+import com.google.android.material.card.MaterialCardView;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+public class PluginAdapter extends RecyclerView.Adapter<PluginAdapter.PluginViewHolder> {
+    
+    private final Context context;
+    private final List<PluginInfo> plugins;
+    private final PluginActionListener actionListener;
+    private final SimpleDateFormat dateFormat;
+    private final PluginManager pluginManager;
+    
+    // Status colors
+    private static final int COLOR_LOADED = Color.parseColor("#4CAF50");    // Green
+    private static final int COLOR_ENABLED = Color.parseColor("#2196F3");   // Blue  
+    private static final int COLOR_DISABLED = Color.parseColor("#757575");  // Gray
+    private static final int COLOR_ERROR = Color.parseColor("#F44336");     // Red
+    
+    public interface PluginActionListener {
+        void onPluginClick(PluginInfo plugin);
+        void onEnableToggle(PluginInfo plugin, boolean enabled);
+        void onPluginSettings(PluginInfo plugin);
+        void onPluginUninstall(PluginInfo plugin);
+    }
+    
+    public PluginAdapter(Context context, List<PluginInfo> plugins, PluginActionListener actionListener) {
+        this.context = context;
+        this.plugins = plugins;
+        this.actionListener = actionListener;
+        this.dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+        this.pluginManager = PluginManager.getInstance();
+    }
+    
+    @NonNull
+    @Override
+    public PluginViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_plugin_entry, parent, false);
+        return new PluginViewHolder(view);
+    }
+    
+    @Override
+    public void onBindViewHolder(@NonNull PluginViewHolder holder, int position) {
+        PluginInfo plugin = plugins.get(position);
+        holder.bind(plugin);
+    }
+    
+    @Override
+    public int getItemCount() {
+        return plugins.size();
+    }
+    
+    class PluginViewHolder extends RecyclerView.ViewHolder {
+        
+        private final MaterialCardView cardView;
+        private final TextView tvPluginName;
+        private final TextView tvPluginVersion;
+        private final TextView tvPluginAuthor;
+        private final TextView tvPluginDescription;
+        private final TextView tvPluginStatus;
+        private final TextView tvPluginSize;
+        private final TextView tvLastModified;
+        private final Switch switchEnabled;
+        private final ImageView ivPluginIcon;
+        private final View statusIndicator;
+        private final View btnSettings;
+        private final View btnUninstall;
+        
+        public PluginViewHolder(@NonNull View itemView) {
+            super(itemView);
+            
+            cardView = itemView.findViewById(R.id.card_plugin);
+            tvPluginName = itemView.findViewById(R.id.tv_plugin_name);
+            tvPluginVersion = itemView.findViewById(R.id.tv_plugin_version);
+            tvPluginAuthor = itemView.findViewById(R.id.tv_plugin_author);
+            tvPluginDescription = itemView.findViewById(R.id.tv_plugin_description);
+            tvPluginStatus = itemView.findViewById(R.id.tv_plugin_status);
+            tvPluginSize = itemView.findViewById(R.id.tv_plugin_size);
+            tvLastModified = itemView.findViewById(R.id.tv_last_modified);
+            switchEnabled = itemView.findViewById(R.id.switch_enabled);
+            ivPluginIcon = itemView.findViewById(R.id.iv_plugin_icon);
+            statusIndicator = itemView.findViewById(R.id.status_indicator);
+            btnSettings = itemView.findViewById(R.id.btn_settings);
+            btnUninstall = itemView.findViewById(R.id.btn_uninstall);
+        }
+        
+        public void bind(PluginInfo plugin) {
+            // Basic plugin info
+            tvPluginName.setText(plugin.getDisplayName());
+            tvPluginVersion.setText("v" + plugin.version);
+            tvPluginAuthor.setText("by " + (plugin.author != null ? plugin.author : "Unknown"));
+            
+            // Description
+            if (plugin.description != null && !plugin.description.isEmpty()) {
+                tvPluginDescription.setText(plugin.description);
+                tvPluginDescription.setVisibility(View.VISIBLE);
+            } else {
+                tvPluginDescription.setVisibility(View.GONE);
+            }
+            
+            // Plugin size
+            if (plugin.size > 0) {
+                tvPluginSize.setText(formatFileSize(plugin.size));
+            } else {
+                tvPluginSize.setText("Unknown size");
+            }
+            
+            // Last modified date
+            if (plugin.lastModified > 0) {
+                tvLastModified.setText("Modified: " + dateFormat.format(new Date(plugin.lastModified)));
+            } else {
+                tvLastModified.setText("Modified: Unknown");
+            }
+            
+            // Status and colors
+            updatePluginStatus(plugin);
+            
+            // FIXED: Enable/disable switch - properly check THIS specific plugin
+            boolean isEnabled = pluginManager != null && pluginManager.isPluginEnabled(plugin.id);
+            switchEnabled.setOnCheckedChangeListener(null); // Clear listener first
+            switchEnabled.setChecked(isEnabled);
+            switchEnabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (buttonView.isPressed()) { // Only respond to user interactions
+                    actionListener.onEnableToggle(plugin, isChecked);
+                }
+            });
+            
+            // Plugin icon (placeholder for now)
+            setPluginIcon(plugin);
+            
+            // Click listeners
+            cardView.setOnClickListener(v -> actionListener.onPluginClick(plugin));
+            
+            btnSettings.setOnClickListener(v -> actionListener.onPluginSettings(plugin));
+            
+            btnUninstall.setOnClickListener(v -> actionListener.onPluginUninstall(plugin));
+            
+            // Card styling based on status
+            updateCardStyling(plugin);
+        }
+        
+        private void updatePluginStatus(PluginInfo plugin) {
+            String statusText;
+            int statusColor;
+            
+            switch (plugin.status) {
+                case LOADED:
+                    statusText = "Loaded";
+                    statusColor = COLOR_LOADED;
+                    break;
+                case LOADING:
+                    statusText = "Loading...";
+                    statusColor = COLOR_ENABLED;
+                    break;
+                case ERROR:
+                    statusText = "Error";
+                    statusColor = COLOR_ERROR;
+                    break;
+                case DISABLED:
+                    statusText = "Disabled";
+                    statusColor = COLOR_DISABLED;
+                    break;
+                case DISCOVERED:
+                    statusText = "Available";
+                    statusColor = COLOR_ENABLED;
+                    break;
+                default:
+                    statusText = "Unknown";
+                    statusColor = COLOR_DISABLED;
+                    break;
+            }
+            
+            tvPluginStatus.setText(statusText);
+            tvPluginStatus.setTextColor(statusColor);
+            statusIndicator.setBackgroundColor(statusColor);
+        }
+        
+        private void setPluginIcon(PluginInfo plugin) {
+            // For now, use a default icon based on plugin type/category
+            // In a real implementation, this could load custom icons from plugin assets
+            
+            if (plugin.hasErrors()) {
+                ivPluginIcon.setImageResource(android.R.drawable.ic_dialog_alert);
+            } else if (plugin.isLoaded()) {
+                ivPluginIcon.setImageResource(android.R.drawable.ic_menu_manage);
+            } else {
+                ivPluginIcon.setImageResource(android.R.drawable.ic_menu_preferences);
+            }
+        }
+        
+        private void updateCardStyling(PluginInfo plugin) {
+            if (plugin.hasErrors()) {
+                // Error state - red tint
+                cardView.setCardBackgroundColor(Color.parseColor("#FFEBEE"));
+                cardView.setStrokeColor(COLOR_ERROR);
+                cardView.setStrokeWidth(2);
+            } else if (plugin.isLoaded()) {
+                // Loaded state - green tint
+                cardView.setCardBackgroundColor(Color.parseColor("#E8F5E8"));
+                cardView.setStrokeColor(COLOR_LOADED);
+                cardView.setStrokeWidth(2);
+            } else {
+                // Default state
+                cardView.setCardBackgroundColor(Color.WHITE);
+                cardView.setStrokeColor(Color.TRANSPARENT);
+                cardView.setStrokeWidth(0);
+            }
+        }
+        
+        private String formatFileSize(long sizeBytes) {
+            if (sizeBytes < 1024) {
+                return sizeBytes + " B";
+            } else if (sizeBytes < 1024 * 1024) {
+                return String.format(Locale.getDefault(), "%.1f KB", sizeBytes / 1024.0);
+            } else {
+                return String.format(Locale.getDefault(), "%.1f MB", sizeBytes / (1024.0 * 1024.0));
+            }
+        }
+    }
+    
+    /**
+     * Update a specific plugin in the list
+     */
+    public void updatePlugin(PluginInfo plugin) {
+        for (int i = 0; i < plugins.size(); i++) {
+            if (plugins.get(i).id.equals(plugin.id)) {
+                plugins.set(i, plugin);
+                notifyItemChanged(i);
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Add a new plugin to the list
+     */
+    public void addPlugin(PluginInfo plugin) {
+        plugins.add(plugin);
+        notifyItemInserted(plugins.size() - 1);
+    }
+    
+    /**
+     * Remove a plugin from the list
+     */
+    public void removePlugin(String pluginId) {
+        for (int i = 0; i < plugins.size(); i++) {
+            if (plugins.get(i).id.equals(pluginId)) {
+                plugins.remove(i);
+                notifyItemRemoved(i);
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Filter plugins by status
+     */
+    public void filterByStatus(PluginStatus status) {
+        // Implementation for filtering - would require additional logic
+        notifyDataSetChanged();
+    }
+    
+    /**
+     * Sort plugins by name, date, etc.
+     */
+    public void sortPlugins(SortType sortType) {
+        switch (sortType) {
+            case NAME:
+                plugins.sort((p1, p2) -> p1.getDisplayName().compareToIgnoreCase(p2.getDisplayName()));
+                break;
+            case DATE:
+                plugins.sort((p1, p2) -> Long.compare(p2.lastModified, p1.lastModified));
+                break;
+            case SIZE:
+                plugins.sort((p1, p2) -> Long.compare(p2.size, p1.size));
+                break;
+            case STATUS:
+                plugins.sort((p1, p2) -> p1.status.compareTo(p2.status));
+                break;
+        }
+        notifyDataSetChanged();
+    }
+    
+    public enum SortType {
+        NAME, DATE, SIZE, STATUS
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginDevelopmentActivity.java
+package com.axiomloader.modding;
+
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.OpenableColumns;
+import android.view.MenuItem;
+import android.widget.EditText;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
+import com.axiomloader.R;
+import com.axiomloader.databinding.ActivityPluginDevelopmentBinding;
+import com.axiomloader.utils.LogUtils;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+public class PluginDevelopmentActivity extends AppCompatActivity {
+    
+    private ActivityPluginDevelopmentBinding binding;
+    private static final String TAG = "PluginDevelopmentActivity";
+    private SimpleDateFormat dateFormat;
+    
+    private static final int REQUEST_CODE_IMPORT_FILE = 1001;
+    private static final int REQUEST_CODE_IMPORT_DIRECTORY = 1002;
+    private static final int REQUEST_CODE_IMPORT_TEMPLATE = 1003;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        binding = ActivityPluginDevelopmentBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle(R.string.plugin_development);
+        }
+        
+        dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
+        setupCards();
+        
+        LogUtils.logInfo(TAG, "PluginDevelopmentActivity created");
+    }
+    
+    private void setupCards() {
+        binding.cardCreateTemplate.setOnClickListener(v -> showTemplateOptions());
+        binding.cardTestPlugin.setOnClickListener(v -> showTestingOptions());
+        binding.cardDocumentation.setOnClickListener(v -> showDocumentation());
+        binding.cardDevTools.setOnClickListener(v -> showDeveloperTools());
+        binding.cardHotReload.setOnClickListener(v -> toggleHotReload());
+        binding.cardConsole.setOnClickListener(v -> openPluginConsole());
+        
+        // Setup quick action buttons
+        if (binding.btnNewProject != null) {
+            binding.btnNewProject.setOnClickListener(v -> showTemplateOptions());
+        }
+        if (binding.btnImportProject != null) {
+            binding.btnImportProject.setOnClickListener(v -> importPlugin());
+        }
+    }
+    
+    private void showTemplateOptions() {
+        String[] templates = {
+            "Basic Plugin Template",
+            "UI Modification Plugin", 
+            "Log Analyzer Plugin",
+            "Network Monitor Plugin",
+            "Theme Plugin",
+            "Advanced Plugin Template"
+        };
+        
+        new AlertDialog.Builder(this)
+            .setTitle("Create Plugin Template")
+            .setItems(templates, (dialog, which) -> createTemplate(which))
+            .show();
+    }
+    
+    private void createTemplate(int templateType) {
+        new Thread(() -> {
+            try {
+                String templateName = getTemplateName(templateType);
+                File projectDir = generateTemplate(templateType, templateName);
+                
+                runOnUiThread(() -> {
+                    if (projectDir != null && projectDir.exists()) {
+                        Toast.makeText(this, "Template created: " + templateName + "\n" + projectDir.getAbsolutePath(), Toast.LENGTH_LONG).show();
+                        offerToShareTemplate(projectDir);
+                    } else {
+                        Toast.makeText(this, "Failed to create template", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Failed to create template", e);
+                runOnUiThread(() -> Toast.makeText(this, "Template creation failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+        }).start();
+    }
+    
+    private String getTemplateName(int templateType) {
+        switch (templateType) {
+            case 0: return "BasicPlugin";
+            case 1: return "UIModificationPlugin";
+            case 2: return "LogAnalyzerPlugin";
+            case 3: return "NetworkMonitorPlugin";
+            case 4: return "ThemePlugin";
+            case 5: return "AdvancedPlugin";
+            default: return "CustomPlugin";
+        }
+    }
+    
+    private File generateTemplate(int templateType, String templateName) throws IOException {
+        File templateDir = new File(getExternalFilesDir(null), "axiom_plugins/development");
+        if (!templateDir.exists()) {
+            templateDir.mkdirs();
+        }
+        
+        String timestamp = dateFormat.format(new Date());
+        File projectDir = new File(templateDir, templateName + "_" + timestamp);
+        if (!projectDir.exists()) {
+            projectDir.mkdirs();
+        }
+        
+        // Generate Java source file
+        File javaFile = new File(projectDir, templateName + ".java");
+        try (FileWriter writer = new FileWriter(javaFile)) {
+            writer.write(generateJavaTemplate(templateType, templateName));
+        }
+        
+        // Generate manifest file
+        File manifestFile = new File(projectDir, "plugin.json");
+        try (FileWriter writer = new FileWriter(manifestFile)) {
+            writer.write(generateManifestTemplate(templateType, templateName));
+        }
+        
+        // Generate README
+        File readmeFile = new File(projectDir, "README.md");
+        try (FileWriter writer = new FileWriter(readmeFile)) {
+            writer.write(generateReadmeTemplate(templateType, templateName));
+        }
+        
+        // Generate build script
+        File buildScript = new File(projectDir, "build.sh");
+        try (FileWriter writer = new FileWriter(buildScript)) {
+            writer.write(generateBuildScript(templateName));
+        }
+        buildScript.setExecutable(true);
+        
+        LogUtils.logInfo(TAG, "Generated template: " + templateName);
+        return projectDir;
+    }
+    
+    private String generateJavaTemplate(int templateType, String templateName) {
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("package com.axiom.plugins;\n\n");
+        sb.append("import android.content.Context;\n");
+        sb.append("import com.axiomloader.modding.PluginInterface;\n");
+        sb.append("import java.util.HashMap;\n");
+        sb.append("import java.util.Map;\n\n");
+        
+        sb.append("/**\n");
+        sb.append(" * ").append(templateName).append(" - Generated plugin template\n");
+        sb.append(" * Auto-generated by Axiom Plugin Development System\n");
+        sb.append(" */\n");
+        sb.append("public class ").append(templateName).append(" implements PluginInterface {\n\n");
+        
+        sb.append("    private Context context;\n");
+        sb.append("    private boolean isInitialized = false;\n\n");
+        
+        sb.append("    @Override\n");
+        sb.append("    public void onLoad(Context context) {\n");
+        sb.append("        this.context = context;\n");
+        sb.append("        initialize();\n");
+        sb.append("        isInitialized = true;\n");
+        sb.append("    }\n\n");
+        
+        sb.append("    @Override\n");
+        sb.append("    public void onUnload() {\n");
+        sb.append("        cleanup();\n");
+        sb.append("        isInitialized = false;\n");
+        sb.append("    }\n\n");
+        
+        sb.append("    @Override\n");
+        sb.append("    public Map<String, Object> getPluginInfo() {\n");
+        sb.append("        Map<String, Object> info = new HashMap<>();\n");
+        sb.append("        info.put(\"name\", \"").append(templateName).append("\");\n");
+        sb.append("        info.put(\"version\", \"1.0.0\");\n");
+        sb.append("        info.put(\"author\", \"Your Name\");\n");
+        sb.append("        info.put(\"initialized\", isInitialized);\n");
+        sb.append("        return info;\n");
+        sb.append("    }\n\n");
+        
+        sb.append("    @Override\n");
+        sb.append("    public String getPluginName() {\n");
+        sb.append("        return \"").append(templateName).append("\";\n");
+        sb.append("    }\n\n");
+        
+        sb.append("    @Override\n");
+        sb.append("    public String getPluginVersion() {\n");
+        sb.append("        return \"1.0.0\";\n");
+        sb.append("    }\n\n");
+        
+        sb.append("    @Override\n");
+        sb.append("    public String getPluginDescription() {\n");
+        sb.append("        return \"").append(getTemplateDescription(templateType)).append("\";\n");
+        sb.append("    }\n\n");
+        
+        sb.append(generateTemplateSpecificMethods(templateType));
+        
+        sb.append("    private void initialize() {\n");
+        sb.append("        // Initialize plugin resources\n");
+        sb.append("    }\n\n");
+        
+        sb.append("    private void cleanup() {\n");
+        sb.append("        // Clean up plugin resources\n");
+        sb.append("    }\n");
+        
+        sb.append("}\n");
+        
+        return sb.toString();
+    }
+    
+    private String getTemplateDescription(int templateType) {
+        switch (templateType) {
+            case 0: return "A basic plugin template with minimal functionality";
+            case 1: return "Plugin for modifying user interface elements";
+            case 2: return "Plugin for analyzing and processing log data";
+            case 3: return "Plugin for monitoring network activity";
+            case 4: return "Plugin for customizing app themes and appearance";
+            case 5: return "Advanced plugin template with extended capabilities";
+            default: return "Custom plugin template";
+        }
+    }
+    
+    private String generateTemplateSpecificMethods(int templateType) {
+        switch (templateType) {
+            case 1:
+                return "    public void modifyUI() {\n" +
+                       "        // Add UI modification code here\n" +
+                       "    }\n\n";
+            case 2:
+                return "    public void analyzeLog(String logEntry) {\n" +
+                       "        // Add log analysis code here\n" +
+                       "    }\n\n" +
+                       "    public void generateReport() {\n" +
+                       "        // Generate analysis report\n" +
+                       "    }\n\n";
+            case 3:
+                return "    public void startNetworkMonitoring() {\n" +
+                       "        // Start monitoring network activity\n" +
+                       "    }\n\n" +
+                       "    public void stopNetworkMonitoring() {\n" +
+                       "        // Stop monitoring network activity\n" +
+                       "    }\n\n";
+            case 4:
+                return "    public void applyTheme() {\n" +
+                       "        // Apply custom theme\n" +
+                       "    }\n\n" +
+                       "    public void resetTheme() {\n" +
+                       "        // Reset to default theme\n" +
+                       "    }\n\n";
+            default:
+                return "    public void executeCustomAction() {\n" +
+                       "        // Add your custom functionality here\n" +
+                       "    }\n\n";
+        }
+    }
+    
+    private String generateManifestTemplate(int templateType, String templateName) {
+        return "{\n" +
+               "  \"id\": \"com.axiom.plugins." + templateName.toLowerCase() + "\",\n" +
+               "  \"name\": \"" + templateName + "\",\n" +
+               "  \"version\": \"1.0.0\",\n" +
+               "  \"author\": \"Your Name\",\n" +
+               "  \"description\": \"" + getTemplateDescription(templateType) + "\",\n" +
+               "  \"main_class\": \"com.axiom.plugins." + templateName + "\",\n" +
+               "  \"api_version\": 1,\n" +
+               "  \"min_android_version\": 21,\n" +
+               "  \"permissions\": [\n" +
+               "    " + getTemplatePermissions(templateType) + "\n" +
+               "  ],\n" +
+               "  \"features\": [\n" +
+               "    \"" + getTemplateFeatures(templateType) + "\"\n" +
+               "  ],\n" +
+               "  \"category\": \"" + getTemplateCategory(templateType) + "\",\n" +
+               "  \"tags\": [\"template\", \"generated\"]\n" +
+               "}";
+    }
+    
+    private String getTemplatePermissions(int templateType) {
+        switch (templateType) {
+            case 1: return "\"axiom.permission.MODIFY_UI\"";
+            case 2: return "\"axiom.permission.ACCESS_LOGS\"";
+            case 3: return "\"axiom.permission.NETWORK_ACCESS\"";
+            case 4: return "\"axiom.permission.MODIFY_UI\"";
+            default: return "\"axiom.permission.BASIC_ACCESS\"";
+        }
+    }
+    
+    private String getTemplateFeatures(int templateType) {
+        switch (templateType) {
+            case 1: return "ui_modification";
+            case 2: return "log_analysis";
+            case 3: return "network_monitoring";
+            case 4: return "theme_support";
+            default: return "basic_plugin";
+        }
+    }
+    
+    private String getTemplateCategory(int templateType) {
+        switch (templateType) {
+            case 1: return "ui";
+            case 2: return "analysis";
+            case 3: return "monitoring";
+            case 4: return "customization";
+            default: return "utility";
+        }
+    }
+    
+    private String generateReadmeTemplate(int templateType, String templateName) {
+        return "# " + templateName + "\n\n" +
+               getTemplateDescription(templateType) + "\n\n" +
+               "## Building\n\n" +
+               "```bash\n" +
+               "# Compile Java to class files\n" +
+               "javac -cp /path/to/android.jar " + templateName + ".java\n\n" +
+               "# Convert to DEX format\n" +
+               "d8 --output . " + templateName + ".class\n" +
+               "```\n\n" +
+               "## Installation\n\n" +
+               "1. Copy the DEX file and plugin.json to the plugin directory\n" +
+               "2. Enable the plugin in Axiom Plugin Manager\n\n" +
+               "## Development\n\n" +
+               "Modify the methods to implement your desired functionality.\n\n" +
+               "## API Reference\n\n" +
+               "See the main documentation for available APIs and methods.\n";
+    }
+    
+    private String generateBuildScript(String templateName) {
+        return "#!/bin/bash\n\n" +
+               "# Build script for " + templateName + "\n\n" +
+               "echo \"Building " + templateName + "...\"\n\n" +
+               "ANDROID_HOME=${ANDROID_HOME:-$HOME/Android/Sdk}\n" +
+               "ANDROID_JAR=$ANDROID_HOME/platforms/android-33/android.jar\n\n" +
+               "if [ ! -f \"$ANDROID_JAR\" ]; then\n" +
+               "    echo \"Error: Android SDK not found\"\n" +
+               "    exit 1\n" +
+               "fi\n\n" +
+               "javac -cp \"$ANDROID_JAR\" -d . " + templateName + ".java\n\n" +
+               "d8 --lib \"$ANDROID_JAR\" --output " + templateName + ".dex " + templateName + ".class\n\n" +
+               "echo \"Build complete: " + templateName + ".dex\"\n";
+    }
+    
+    private void offerToShareTemplate(File projectDir) {
+        new AlertDialog.Builder(this)
+            .setTitle("Template Created")
+            .setMessage("Template created at:\n" + projectDir.getAbsolutePath() + "\n\nWould you like to open the folder?")
+            .setPositiveButton("Open Folder", (dialog, which) -> openFolder(projectDir))
+            .setNegativeButton("Close", null)
+            .show();
+    }
+    
+    private void openFolder(File folder) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            Uri uri = FileProvider.getUriForFile(this, "com.axiomloader.fileprovider", folder);
+            intent.setDataAndType(uri, "resource/folder");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(intent, "Open Folder"));
+        } catch (Exception e) {
+            Toast.makeText(this, "Cannot open folder: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    // CONTINUE TO PART 2 FOR REMAINING METHODS
+    
+   // PART 2 - CONTINUATION OF PluginDevelopmentActivity.java
+// Add this code after Part 1
+
+    private void showTestingOptions() {
+        String[] options = {
+            "Test Current Plugin",
+            "Load Test Plugin",
+            "Run Plugin Validation", 
+            "Performance Test",
+            "Memory Usage Test"
+        };
+        
+        new AlertDialog.Builder(this)
+            .setTitle("Plugin Testing")
+            .setItems(options, (dialog, which) -> executeTest(which))
+            .show();
+    }
+    
+    private void executeTest(int testType) {
+        String testName = getTestName(testType);
+        Toast.makeText(this, "Executing " + testName + "...", Toast.LENGTH_SHORT).show();
+        LogUtils.logInfo(TAG, "Running test: " + testName);
+    }
+    
+    private String getTestName(int testType) {
+        switch (testType) {
+            case 0: return "Current Plugin Test";
+            case 1: return "Load Test Plugin";
+            case 2: return "Plugin Validation";
+            case 3: return "Performance Test";
+            case 4: return "Memory Usage Test";
+            default: return "Unknown Test";
+        }
+    }
+    
+    private void showDocumentation() {
+        String documentation = "# Plugin Development Documentation\n\n" +
+                             "## Getting Started\n" +
+                             "1. Create a plugin template\n" +
+                             "2. Implement PluginInterface methods\n" +
+                             "3. Create plugin.json manifest\n" +
+                             "4. Build and test your plugin\n\n" +
+                             "## Required Methods\n" +
+                             "- onLoad(Context): Initialize plugin\n" +
+                             "- onUnload(): Clean up resources\n" +
+                             "- getPluginInfo(): Return metadata\n\n" +
+                             "## Best Practices\n" +
+                             "- Always clean up in onUnload()\n" +
+                             "- Handle exceptions gracefully\n" +
+                             "- Use appropriate permissions\n" +
+                             "- Test thoroughly before distribution\n";
+        
+        new AlertDialog.Builder(this)
+            .setTitle("Plugin Development Guide")
+            .setMessage(documentation)
+            .setPositiveButton("Close", null)
+            .show();
+    }
+    
+    private void showDeveloperTools() {
+        String[] tools = {
+            "Plugin Compiler",
+            "Manifest Validator", 
+            "DEX Inspector",
+            "Log Viewer",
+            "Performance Monitor"
+        };
+        
+        new AlertDialog.Builder(this)
+            .setTitle("Developer Tools")
+            .setItems(tools, (dialog, which) -> launchTool(which))
+            .show();
+    }
+    
+    private void launchTool(int toolIndex) {
+        String toolName = getToolName(toolIndex);
+        Toast.makeText(this, "Launching " + toolName + "...", Toast.LENGTH_SHORT).show();
+        LogUtils.logInfo(TAG, "Launching developer tool: " + toolName);
+    }
+    
+    private String getToolName(int toolIndex) {
+        switch (toolIndex) {
+            case 0: return "Plugin Compiler";
+            case 1: return "Manifest Validator";
+            case 2: return "DEX Inspector";
+            case 3: return "Log Viewer";
+            case 4: return "Performance Monitor";
+            default: return "Unknown Tool";
+        }
+    }
+    
+    private void toggleHotReload() {
+        boolean hotReloadEnabled = getSharedPreferences("axiom_plugin_settings", MODE_PRIVATE)
+            .getBoolean("hot_reload", false);
+        hotReloadEnabled = !hotReloadEnabled;
+        getSharedPreferences("axiom_plugin_settings", MODE_PRIVATE)
+            .edit()
+            .putBoolean("hot_reload", hotReloadEnabled)
+            .apply();
+        
+        Toast.makeText(this, hotReloadEnabled ? "Hot Reload Enabled" : "Hot Reload Disabled", Toast.LENGTH_SHORT).show();
+        LogUtils.logInfo(TAG, "Hot reload toggled: " + hotReloadEnabled);
+    }
+    
+    private void openPluginConsole() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Plugin Console");
+        
+        ScrollView scrollView = new ScrollView(this);
+        TextView consoleText = new TextView(this);
+        consoleText.setText(generateConsoleOutput());
+        consoleText.setTextSize(12);
+        consoleText.setTypeface(android.graphics.Typeface.MONOSPACE);
+        consoleText.setPadding(16, 16, 16, 16);
+        scrollView.addView(consoleText);
+        
+        builder.setView(scrollView);
+        builder.setPositiveButton("Close", null);
+        builder.setNeutralButton("Clear", (dialog, which) -> {
+            Toast.makeText(this, "Console cleared", Toast.LENGTH_SHORT).show();
+        });
+        builder.setNegativeButton("Export", (dialog, which) -> {
+            Toast.makeText(this, "Console log exported", Toast.LENGTH_SHORT).show();
+        });
+        
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        
+        LogUtils.logInfo(TAG, "Plugin console opened");
+    }
+    
+    private String generateConsoleOutput() {
+        StringBuilder console = new StringBuilder();
+        console.append("=== AXIOM PLUGIN CONSOLE ===\n\n");
+        
+        PluginManager pluginManager = PluginManager.getInstance();
+        
+        console.append("[System] Plugin System Status: ");
+        console.append(pluginManager.isPluginSystemEnabled() ? "ENABLED" : "DISABLED");
+        console.append("\n");
+        
+        console.append("[System] Total Plugins: ").append(pluginManager.getTotalPluginCount()).append("\n");
+        console.append("[System] Loaded Plugins: ").append(pluginManager.getLoadedPluginCount()).append("\n");
+        console.append("[System] Plugin Directory: ").append(pluginManager.getPluginDirectory().getAbsolutePath()).append("\n\n");
+        
+        console.append("=== LOADED PLUGINS ===\n");
+        for (PluginInfo plugin : pluginManager.getLoadedPlugins()) {
+            console.append(String.format("[%s] %s v%s - Status: %s\n", 
+                plugin.id, plugin.name, plugin.version, plugin.status));
+        }
+        
+        console.append("\n=== RECENT ACTIVITY ===\n");
+        console.append("[Info] Last scan: ").append(new Date(pluginManager.getLastScanTime())).append("\n");
+        console.append("[Info] Total load attempts: ").append(pluginManager.getTotalLoadAttempts()).append("\n");
+        console.append("[Info] Successful loads: ").append(pluginManager.getSuccessfulLoads()).append("\n");
+        console.append("[Info] Failed loads: ").append(pluginManager.getFailedLoads()).append("\n");
+        
+        console.append("\n=== END CONSOLE ===\n");
+        
+        return console.toString();
+    }
+    
+    private void importPlugin() {
+        String[] importOptions = {
+            "From File (.dex, .apk, .jar)",
+            "From Directory",
+            "From URL",
+            "From Template"
+        };
+        
+        new AlertDialog.Builder(this)
+            .setTitle("Import Plugin")
+            .setItems(importOptions, (dialog, which) -> {
+                switch (which) {
+                    case 0:
+                        importFromFile();
+                        break;
+                    case 1:
+                        importFromDirectory();
+                        break;
+                    case 2:
+                        importFromUrl();
+                        break;
+                    case 3:
+                        importFromTemplate();
+                        break;
+                }
+            })
+            .show();
+    }
+    
+    private void importFromFile() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+            "application/java-archive",
+            "application/vnd.android.package-archive",
+            "application/octet-stream"
+        });
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        
+        try {
+            startActivityForResult(Intent.createChooser(intent, "Select Plugin File"), REQUEST_CODE_IMPORT_FILE);
+            LogUtils.logInfo(TAG, "Opening file picker for plugin import");
+        } catch (Exception e) {
+            Toast.makeText(this, "Cannot open file picker: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            LogUtils.logError(TAG, "Failed to open file picker", e);
+        }
+    }
+    
+    private void importFromDirectory() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        try {
+            startActivityForResult(intent, REQUEST_CODE_IMPORT_DIRECTORY);
+            LogUtils.logInfo(TAG, "Opening directory picker for plugin import");
+        } catch (Exception e) {
+            Toast.makeText(this, "Cannot open directory picker: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            LogUtils.logError(TAG, "Failed to open directory picker", e);
+        }
+    }
+    
+    private void importFromUrl() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Import from URL");
+        
+        final EditText input = new EditText(this);
+        input.setHint("https://example.com/plugin.dex");
+        input.setInputType(android.text.InputType.TYPE_TEXT_VARIATION_URI);
+        builder.setView(input);
+        
+        builder.setPositiveButton("Import", (dialog, which) -> {
+            String url = input.getText().toString().trim();
+            if (!url.isEmpty()) {
+                downloadAndImportPlugin(url);
+            } else {
+                Toast.makeText(this, "Please enter a valid URL", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+    
+    private void importFromTemplate() {
+        Toast.makeText(this, "Import from template - selecting development directory", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        try {
+            startActivityForResult(intent, REQUEST_CODE_IMPORT_TEMPLATE);
+        } catch (Exception e) {
+            Toast.makeText(this, "Cannot open directory picker", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    private void downloadAndImportPlugin(String url) {
+        Toast.makeText(this, "Downloading plugin from URL...", Toast.LENGTH_SHORT).show();
+        LogUtils.logInfo(TAG, "Downloading plugin from: " + url);
+        
+        new Thread(() -> {
+            runOnUiThread(() -> Toast.makeText(this, "URL import feature coming soon!", Toast.LENGTH_LONG).show());
+            LogUtils.logInfo(TAG, "URL import requested but not yet implemented");
+        }).start();
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        if (resultCode == RESULT_OK && data != null) {
+            switch (requestCode) {
+                case REQUEST_CODE_IMPORT_FILE:
+                    handleImportedFile(data.getData());
+                    break;
+                case REQUEST_CODE_IMPORT_DIRECTORY:
+                    handleImportedDirectory(data.getData());
+                    break;
+                case REQUEST_CODE_IMPORT_TEMPLATE:
+                    handleImportedTemplate(data.getData());
+                    break;
+            }
+        }
+    }
+    
+    private void handleImportedFile(Uri fileUri) {
+        if (fileUri == null) return;
+        
+        new Thread(() -> {
+            try {
+                runOnUiThread(() -> Toast.makeText(this, "Importing plugin file...", Toast.LENGTH_SHORT).show());
+                
+                File pluginDir = new File(getExternalFilesDir(null), "axiom_plugins");
+                if (!pluginDir.exists()) pluginDir.mkdirs();
+                
+                String fileName = getFileNameFromUri(fileUri);
+                File destFile = new File(pluginDir, fileName);
+                
+                InputStream inputStream = getContentResolver().openInputStream(fileUri);
+                OutputStream outputStream = new FileOutputStream(destFile);
+                
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, length);
+                }
+                
+                inputStream.close();
+                outputStream.close();
+                
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Plugin imported: " + fileName + "\nScanning...", Toast.LENGTH_LONG).show();
+                    PluginManager.getInstance().scanForPlugins();
+                });
+                
+                LogUtils.logInfo(TAG, "Plugin imported successfully: " + fileName);
+                
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(this, "Import failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                LogUtils.logError(TAG, "Failed to import plugin file", e);
+            }
+        }).start();
+    }
+    
+    private void handleImportedDirectory(Uri dirUri) {
+        Toast.makeText(this, "Scanning directory for plugins...", Toast.LENGTH_SHORT).show();
+        LogUtils.logInfo(TAG, "Importing plugins from directory: " + dirUri);
+    }
+    
+    private void handleImportedTemplate(Uri templateUri) {
+        Toast.makeText(this, "Importing template project...", Toast.LENGTH_SHORT).show();
+        LogUtils.logInfo(TAG, "Importing template from: " + templateUri);
+    }
+    
+    private String getFileNameFromUri(Uri uri) {
+        String fileName = "imported_plugin.dex";
+        
+        try {
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (nameIndex != -1) {
+                    fileName = cursor.getString(nameIndex);
+                }
+                cursor.close();
+            }
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to get filename from URI", e);
+        }
+        
+        if (!fileName.endsWith(".dex") && !fileName.endsWith(".apk") && !fileName.endsWith(".jar")) {
+            fileName += ".dex";
+        }
+        
+        return fileName;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        binding = null;
+        LogUtils.logInfo(TAG, "PluginDevelopmentActivity destroyed");
+    }
+}
+
+// END OF PluginDevelopmentActivity.java
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginInfo.java
+package com.axiomloader.modding;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * PluginInfo - Container class for plugin metadata and state information
+ */
+public class PluginInfo {
+    
+    // Basic plugin information
+    public String id;
+    public String name;
+    public String version;
+    public String author;
+    public String description;
+    public int apiVersion;
+    public String mainClass;
+    
+    // File information
+    public File pluginFile;
+    public File manifestFile;
+    public long size;
+    public long lastModified;
+    
+    // Runtime state
+    public PluginStatus status;
+    public String errorMessage;
+    public long loadTime;
+    public long unloadTime;
+    
+    // Permissions and security
+    public List<String> permissions = new ArrayList<>();
+    public boolean trusted = false;
+    
+    // Statistics
+    public int loadCount = 0;
+    public long totalRunTime = 0;
+    
+    public PluginInfo() {
+        this.status = PluginStatus.UNKNOWN;
+    }
+    
+    public boolean isLoaded() {
+        return status == PluginStatus.LOADED;
+    }
+    
+    public boolean hasErrors() {
+        return status == PluginStatus.ERROR;
+    }
+    
+    public String getDisplayName() {
+        return name != null ? name : id;
+    }
+    
+    public String getStatusText() {
+        return status != null ? status.toString() : "UNKNOWN";
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("PluginInfo{id='%s', name='%s', version='%s', status=%s}", 
+                id, name, version, status);
+    }
+}
+
+/**
+ * Plugin status enumeration
+ */
+enum PluginStatus {
+    UNKNOWN,
+    DISCOVERED,
+    LOADING,
+    LOADED,
+    UNLOADING,
+    UNLOADED,
+    ERROR,
+    DISABLED
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginInfoActivity.java
+package com.axiomloader.modding;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.MenuItem;
+import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import com.axiomloader.R;
+import com.axiomloader.databinding.ActivityPluginInfoBinding;
+import com.axiomloader.utils.LogUtils;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+public class PluginInfoActivity extends AppCompatActivity {
+    
+    private ActivityPluginInfoBinding binding;
+    private PluginManager pluginManager;
+    private PluginInfo pluginInfo;
+    private String pluginId;
+    private static final String TAG = "PluginInfoActivity";
+    private SimpleDateFormat dateFormat;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        binding = ActivityPluginInfoBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle(R.string.plugin_info);
+        }
+        
+        pluginManager = PluginManager.getInstance();
+        dateFormat = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+        
+        pluginId = getIntent().getStringExtra("plugin_id");
+        if (pluginId == null || pluginId.isEmpty()) {
+            Toast.makeText(this, "No plugin ID provided", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+        
+        loadPluginInfo();
+        setupButtons();
+        
+        LogUtils.logInfo(TAG, "PluginInfoActivity created for plugin: " + pluginId);
+    }
+    
+    private void loadPluginInfo() {
+        pluginInfo = pluginManager.getPluginInfo(pluginId);
+        if (pluginInfo == null) {
+            Toast.makeText(this, "Plugin not found: " + pluginId, Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+        displayPluginInfo();
+    }
+    
+    private void displayPluginInfo() {
+        binding.tvPluginName.setText(pluginInfo.getDisplayName());
+        binding.tvPluginVersion.setText("Version " + (pluginInfo.version != null ? pluginInfo.version : "Unknown"));
+        binding.tvPluginAuthor.setText(pluginInfo.author != null ? pluginInfo.author : "Unknown Author");
+        binding.tvPluginId.setText("ID: " + pluginInfo.id);
+        
+        if (pluginInfo.description != null && !pluginInfo.description.isEmpty()) {
+            binding.tvPluginDescription.setText(pluginInfo.description);
+        } else {
+            binding.tvPluginDescription.setText("No description available");
+        }
+        
+        updateStatusDisplay();
+        displayFileInfo();
+        displayRuntimeInfo();
+        displayPermissions();
+        displayStatistics();
+    }
+    
+    private void updateStatusDisplay() {
+        String statusText = pluginInfo.getStatusText();
+        binding.tvPluginStatus.setText(statusText);
+        
+        int statusColor = getStatusColor(pluginInfo.status);
+        binding.tvPluginStatus.setTextColor(statusColor);
+        binding.statusIndicator.setBackgroundColor(statusColor);
+        
+        boolean isLoaded = pluginInfo.isLoaded();
+        binding.btnTogglePlugin.setText(isLoaded ? "Disable" : "Enable");
+        binding.btnTogglePlugin.setEnabled(pluginInfo.status != PluginStatus.ERROR);
+    }
+    
+    private int getStatusColor(PluginStatus status) {
+        switch (status) {
+            case LOADED:
+                return getColor(android.R.color.holo_green_dark);
+            case ERROR:
+                return getColor(android.R.color.holo_red_dark);
+            case DISABLED:
+            case UNLOADED:
+                return getColor(android.R.color.darker_gray);
+            case LOADING:
+                return getColor(android.R.color.holo_blue_dark);
+            case DISCOVERED:
+                return getColor(android.R.color.holo_orange_light);
+            default:
+                return getColor(android.R.color.darker_gray);
+        }
+    }
+    
+    private void displayFileInfo() {
+        binding.tvFileSize.setText(pluginInfo.size > 0 ? formatFileSize(pluginInfo.size) : "Unknown");
+        
+        if (pluginInfo.lastModified > 0) {
+            binding.tvLastModified.setText(dateFormat.format(new Date(pluginInfo.lastModified)));
+        } else {
+            binding.tvLastModified.setText("Unknown");
+        }
+        
+        if (pluginInfo.pluginFile != null) {
+            binding.tvFilePath.setText(pluginInfo.pluginFile.getAbsolutePath());
+        } else {
+            binding.tvFilePath.setText("Not available");
+        }
+        
+        binding.tvApiVersion.setText(String.valueOf(pluginInfo.apiVersion));
+    }
+    
+    private void displayRuntimeInfo() {
+        binding.tvLoadCount.setText(String.valueOf(pluginInfo.loadCount));
+        
+        if (pluginInfo.totalRunTime > 0) {
+            binding.tvTotalRuntime.setText(formatDuration(pluginInfo.totalRunTime));
+        } else {
+            binding.tvTotalRuntime.setText("Not available");
+        }
+        
+        if (pluginInfo.loadTime > 0) {
+            binding.tvLoadTime.setText(dateFormat.format(new Date(pluginInfo.loadTime)));
+        } else {
+            binding.tvLoadTime.setText("Never loaded");
+        }
+        
+        if (pluginInfo.errorMessage != null && !pluginInfo.errorMessage.isEmpty()) {
+            binding.tvErrorMessage.setText(pluginInfo.errorMessage);
+            binding.cardErrorInfo.setVisibility(android.view.View.VISIBLE);
+        } else {
+            binding.cardErrorInfo.setVisibility(android.view.View.GONE);
+        }
+    }
+    
+    private void displayPermissions() {
+        if (pluginInfo.permissions != null && !pluginInfo.permissions.isEmpty()) {
+            StringBuilder permissionsText = new StringBuilder();
+            for (int i = 0; i < pluginInfo.permissions.size(); i++) {
+                permissionsText.append("• ").append(pluginInfo.permissions.get(i));
+                if (i < pluginInfo.permissions.size() - 1) {
+                    permissionsText.append("\n");
+                }
+            }
+            binding.tvPermissions.setText(permissionsText.toString());
+        } else {
+            binding.tvPermissions.setText("No permissions required");
+        }
+    }
+    
+    private void displayStatistics() {
+        PluginSecurityManager securityManager = new PluginSecurityManager(this);
+        PluginSecurityManager.SecurityRiskLevel riskLevel = securityManager.getRiskLevel(pluginInfo);
+        
+        binding.tvSecurityRisk.setText(getRiskLevelText(riskLevel));
+        binding.tvSecurityRisk.setTextColor(getRiskLevelColor(riskLevel));
+        
+        binding.tvTrustStatus.setText(pluginInfo.trusted ? "Trusted" : "Untrusted");
+        binding.tvTrustStatus.setTextColor(pluginInfo.trusted ? 
+            getColor(android.R.color.holo_green_dark) : 
+            getColor(android.R.color.holo_orange_dark));
+    }
+    
+    private String getRiskLevelText(PluginSecurityManager.SecurityRiskLevel level) {
+        switch (level) {
+            case MINIMAL: return "Minimal Risk";
+            case LOW: return "Low Risk";
+            case MEDIUM: return "Medium Risk";
+            case HIGH: return "High Risk";
+            default: return "Unknown Risk";
+        }
+    }
+    
+    private int getRiskLevelColor(PluginSecurityManager.SecurityRiskLevel level) {
+        switch (level) {
+            case MINIMAL: return getColor(android.R.color.holo_green_dark);
+            case LOW: return getColor(android.R.color.holo_blue_dark);
+            case MEDIUM: return getColor(android.R.color.holo_orange_dark);
+            case HIGH: return getColor(android.R.color.holo_red_dark);
+            default: return getColor(android.R.color.darker_gray);
+        }
+    }
+    
+    private void setupButtons() {
+        binding.btnTogglePlugin.setOnClickListener(v -> togglePlugin());
+        binding.btnUninstallPlugin.setOnClickListener(v -> showUninstallDialog());
+        binding.btnPluginSettings.setOnClickListener(v -> openPluginSettings());
+        binding.btnSharePlugin.setOnClickListener(v -> sharePluginInfo());
+        binding.btnRefreshInfo.setOnClickListener(v -> refreshPluginInfo());
+    }
+    
+    private void togglePlugin() {
+        boolean currentlyLoaded = pluginInfo.isLoaded();
+        
+        binding.btnTogglePlugin.setEnabled(false);
+        binding.btnTogglePlugin.setText(currentlyLoaded ? "Disabling..." : "Enabling...");
+        
+        new Thread(() -> {
+            try {
+                if (currentlyLoaded) {
+                    pluginManager.disablePlugin(pluginId);
+                    LogUtils.logInfo(TAG, "Plugin disabled: " + pluginId);
+                } else {
+                    pluginManager.enablePlugin(pluginId);
+                    LogUtils.logInfo(TAG, "Plugin enabled: " + pluginId);
+                }
+                
+                runOnUiThread(() -> {
+                    refreshPluginInfo();
+                    Toast.makeText(this, currentlyLoaded ? "Plugin disabled" : "Plugin enabled", Toast.LENGTH_SHORT).show();
+                });
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Failed to toggle plugin", e);
+                runOnUiThread(() -> {
+                    binding.btnTogglePlugin.setEnabled(true);
+                    updateStatusDisplay();
+                    Toast.makeText(this, "Failed to toggle plugin: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
+    
+    private void showUninstallDialog() {
+        new AlertDialog.Builder(this)
+            .setTitle("Uninstall Plugin")
+            .setMessage("Are you sure you want to uninstall " + pluginInfo.name + "?\n\nThis action cannot be undone.")
+            .setPositiveButton("Uninstall", (dialog, which) -> uninstallPlugin())
+            .setNegativeButton("Cancel", null)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show();
+    }
+    
+    private void uninstallPlugin() {
+        new Thread(() -> {
+            try {
+                if (pluginInfo.isLoaded()) {
+                    pluginManager.disablePlugin(pluginId);
+                }
+                
+                boolean filesDeleted = true;
+                if (pluginInfo.pluginFile != null && pluginInfo.pluginFile.exists()) {
+                    filesDeleted = pluginInfo.pluginFile.delete();
+                    if (!filesDeleted) {
+                        throw new Exception("Could not delete plugin file");
+                    }
+                }
+                if (pluginInfo.manifestFile != null && pluginInfo.manifestFile.exists()) {
+                    pluginInfo.manifestFile.delete();
+                }
+                
+                pluginManager.refreshPlugins();
+                
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Plugin uninstalled successfully", Toast.LENGTH_SHORT).show();
+                    finish();
+                });
+                
+                LogUtils.logInfo(TAG, "Plugin uninstalled: " + pluginId);
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Failed to uninstall plugin", e);
+                runOnUiThread(() -> Toast.makeText(this, "Failed to uninstall: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            }
+        }).start();
+    }
+    
+    private void openPluginSettings() {
+        Intent intent = new Intent(this, PluginSettingsActivity.class);
+        intent.putExtra("plugin_id", pluginId);
+        startActivity(intent);
+    }
+    
+    private void refreshPluginInfo() {
+        pluginInfo = pluginManager.getPluginInfo(pluginId);
+        if (pluginInfo != null) {
+            displayPluginInfo();
+        } else {
+            Toast.makeText(this, "Plugin no longer available", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    }
+    
+    private void sharePluginInfo() {
+        StringBuilder shareText = new StringBuilder();
+        shareText.append("=== AXIOM PLUGIN INFO ===\n\n");
+        shareText.append("Name: ").append(pluginInfo.name).append("\n");
+        shareText.append("Version: ").append(pluginInfo.version).append("\n");
+        shareText.append("Author: ").append(pluginInfo.author != null ? pluginInfo.author : "Unknown").append("\n");
+        shareText.append("ID: ").append(pluginInfo.id).append("\n");
+        shareText.append("Status: ").append(pluginInfo.getStatusText()).append("\n");
+        shareText.append("Size: ").append(formatFileSize(pluginInfo.size)).append("\n");
+        shareText.append("API Version: ").append(pluginInfo.apiVersion).append("\n");
+        
+        if (pluginInfo.description != null && !pluginInfo.description.isEmpty()) {
+            shareText.append("\nDescription:\n").append(pluginInfo.description).append("\n");
+        }
+        
+        if (pluginInfo.permissions != null && !pluginInfo.permissions.isEmpty()) {
+            shareText.append("\nPermissions:\n");
+            for (String permission : pluginInfo.permissions) {
+                shareText.append("• ").append(permission).append("\n");
+            }
+        }
+        
+        if (pluginInfo.errorMessage != null && !pluginInfo.errorMessage.isEmpty()) {
+            shareText.append("\nError: ").append(pluginInfo.errorMessage).append("\n");
+        }
+        
+        shareText.append("\n--- Shared from Axiom Plugin Manager ---");
+        
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText.toString());
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Plugin Info: " + pluginInfo.name);
+        startActivity(Intent.createChooser(shareIntent, "Share Plugin Info"));
+    }
+    
+    private String formatFileSize(long sizeBytes) {
+        if (sizeBytes <= 0) return "0 B";
+        
+        if (sizeBytes < 1024) {
+            return sizeBytes + " B";
+        } else if (sizeBytes < 1024 * 1024) {
+            return String.format(Locale.getDefault(), "%.1f KB", sizeBytes / 1024.0);
+        } else if (sizeBytes < 1024 * 1024 * 1024) {
+            return String.format(Locale.getDefault(), "%.1f MB", sizeBytes / (1024.0 * 1024.0));
+        } else {
+            return String.format(Locale.getDefault(), "%.1f GB", sizeBytes / (1024.0 * 1024.0 * 1024.0));
+        }
+    }
+    
+    private String formatDuration(long milliseconds) {
+        if (milliseconds <= 0) return "0s";
+        
+        long seconds = milliseconds / 1000;
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+        
+        seconds = seconds % 60;
+        minutes = minutes % 60;
+        
+        StringBuilder duration = new StringBuilder();
+        if (hours > 0) {
+            duration.append(hours).append("h ");
+        }
+        if (minutes > 0) {
+            duration.append(minutes).append("m ");
+        }
+        if (seconds > 0 || duration.length() == 0) {
+            duration.append(seconds).append("s");
+        }
+        
+        return duration.toString().trim();
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshPluginInfo();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        binding = null;
+        LogUtils.logInfo(TAG, "PluginInfoActivity destroyed");
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginInterface.java
+package com.axiomloader.modding;
+
+import android.content.Context;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import java.util.Map;
+
+/**
+ * PluginInterface - Base interface that all plugins must implement
+ * Defines the contract for plugin lifecycle and interaction with the host app
+ */
+public interface PluginInterface {
+    
+    /**
+     * Called when the plugin is loaded by the system
+     * @param context Application context for accessing system services
+     */
+    void onLoad(@NonNull Context context);
+    
+    /**
+     * Called when the plugin is being unloaded
+     * Plugins should clean up resources here
+     */
+    void onUnload();
+    
+    /**
+     * Get plugin metadata
+     * @return Map containing plugin information
+     */
+    @NonNull
+    Map<String, Object> getPluginInfo();
+    
+    /**
+     * Get plugin name for display
+     * @return Human-readable plugin name
+     */
+    @NonNull
+    String getPluginName();
+    
+    /**
+     * Get plugin version
+     * @return Plugin version string
+     */
+    @NonNull
+    String getPluginVersion();
+    
+    /**
+     * Get plugin description
+     * @return Plugin description
+     */
+    @Nullable
+    String getPluginDescription();
+    
+    /**
+     * Called when the host app experiences low memory
+     * Plugins should free non-essential resources
+     */
+    default void onLowMemory() {
+        // Default empty implementation
+    }
+    
+    /**
+     * Called when system requests memory trimming
+     * @param level Memory trim level from ComponentCallbacks2
+     */
+    default void onTrimMemory(int level) {
+        // Default empty implementation
+    }
+    
+    /**
+     * Called when plugin configuration changes
+     * @param config New configuration parameters
+     */
+    default void onConfigurationChanged(@NonNull Map<String, Object> config) {
+        // Default empty implementation
+    }
+    
+    /**
+     * Check if plugin is compatible with current API version
+     * @param apiVersion Current API version
+     * @return true if compatible, false otherwise
+     */
+    default boolean isCompatible(int apiVersion) {
+        return true; // Default assumes compatibility
+    }
+    
+    /**
+     * Get required permissions for this plugin
+     * @return Array of permission strings, or empty array if none needed
+     */
+    @NonNull
+    default String[] getRequiredPermissions() {
+        return new String[0];
+    }
+    
+    /**
+     * Called when plugin should save its state
+     * @return State data to be persisted
+     */
+    @Nullable
+    default Map<String, Object> saveState() {
+        return null;
+    }
+    
+    /**
+     * Called when plugin should restore its state
+     * @param state Previously saved state data
+     */
+    default void restoreState(@Nullable Map<String, Object> state) {
+        // Default empty implementation
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginLoader.java
+package com.axiomloader.modding;
+
+import android.content.Context;
+import com.axiomloader.utils.LogUtils;
+import dalvik.system.DexClassLoader;
+import dalvik.system.PathClassLoader;
+import java.io.File;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * PluginLoader - Handles DEX file loading and class instantiation
+ * Provides secure plugin loading with class isolation and validation
+ * ENHANCED: Complete implementation with resource management and lifecycle tracking
+ */
+public class PluginLoader {
+    
+    private static final String TAG = "PluginLoader";
+    private final Context context;
+    private final Map<String, ClassLoader> classLoaders;
+    private final Map<String, Long> loadTimes;
+    private final Map<String, Integer> loadCounts;
+    private final Map<String, List<WeakReference<Object>>> pluginResources;
+    private final File optimizedDirectory;
+    
+    public PluginLoader(Context context) {
+        this.context = context;
+        this.classLoaders = new ConcurrentHashMap<>();
+        this.loadTimes = new ConcurrentHashMap<>();
+        this.loadCounts = new ConcurrentHashMap<>();
+        this.pluginResources = new ConcurrentHashMap<>();
+        this.optimizedDirectory = new File(context.getCacheDir(), "plugin_dex");
+        
+        if (!optimizedDirectory.exists()) {
+            optimizedDirectory.mkdirs();
+        }
+        
+        cleanupOrphanedDexFiles();
+    }
+    
+    /**
+     * Load a plugin from DEX file
+     */
+    public PluginLoadResult loadPlugin(PluginInfo pluginInfo) {
+        try {
+            LogUtils.logInfo(TAG, "Loading plugin: " + pluginInfo.name);
+            
+            if (!validatePluginFile(pluginInfo.pluginFile)) {
+                return PluginLoadResult.failure("Invalid plugin file");
+            }
+            
+            ClassLoader classLoader = createClassLoader(pluginInfo);
+            if (classLoader == null) {
+                return PluginLoadResult.failure("Failed to create class loader");
+            }
+            
+            Class<?> mainClass = loadMainClass(classLoader, pluginInfo.mainClass);
+            if (mainClass == null) {
+                return PluginLoadResult.failure("Failed to load main class: " + pluginInfo.mainClass);
+            }
+            
+            if (!PluginInterface.class.isAssignableFrom(mainClass)) {
+                return PluginLoadResult.failure("Main class does not implement PluginInterface");
+            }
+            
+            Object pluginInstance = createPluginInstance(mainClass);
+            if (pluginInstance == null) {
+                return PluginLoadResult.failure("Failed to create plugin instance");
+            }
+            
+            classLoaders.put(pluginInfo.id, classLoader);
+            loadTimes.put(pluginInfo.id, System.currentTimeMillis());
+            loadCounts.put(pluginInfo.id, loadCounts.getOrDefault(pluginInfo.id, 0) + 1);
+            
+            initializePluginResources(pluginInfo.id);
+            
+            LogUtils.logInfo(TAG, "Plugin loaded successfully: " + pluginInfo.name);
+            return PluginLoadResult.success(pluginInstance, classLoader);
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to load plugin: " + pluginInfo.name, e);
+            return PluginLoadResult.failure("Load error: " + e.getMessage());
+        }
+    }
+    
+    private boolean validatePluginFile(File pluginFile) {
+        if (pluginFile == null || !pluginFile.exists()) {
+            LogUtils.logError(TAG, "Plugin file does not exist");
+            return false;
+        }
+        
+        if (!pluginFile.canRead()) {
+            LogUtils.logError(TAG, "Plugin file is not readable");
+            return false;
+        }
+        
+        String fileName = pluginFile.getName().toLowerCase();
+        if (!fileName.endsWith(".dex") && !fileName.endsWith(".apk") && !fileName.endsWith(".jar")) {
+            LogUtils.logError(TAG, "Unsupported plugin file format: " + fileName);
+            return false;
+        }
+        
+        if (pluginFile.length() == 0) {
+            LogUtils.logError(TAG, "Plugin file is empty");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    private ClassLoader createClassLoader(PluginInfo pluginInfo) {
+        try {
+            String dexPath = pluginInfo.pluginFile.getAbsolutePath();
+            String optimizedDir = optimizedDirectory.getAbsolutePath();
+            String librarySearchPath = null;
+            ClassLoader parentClassLoader = context.getClassLoader();
+            
+            DexClassLoader classLoader = new DexClassLoader(
+                dexPath, 
+                optimizedDir, 
+                librarySearchPath, 
+                parentClassLoader
+            );
+            
+            LogUtils.logDebug(TAG, "Created class loader for: " + pluginInfo.name);
+            return classLoader;
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to create class loader", e);
+            return null;
+        }
+    }
+    
+    private Class<?> loadMainClass(ClassLoader classLoader, String className) {
+        try {
+            Class<?> clazz = classLoader.loadClass(className);
+            LogUtils.logDebug(TAG, "Loaded main class: " + className);
+            return clazz;
+            
+        } catch (ClassNotFoundException e) {
+            LogUtils.logError(TAG, "Main class not found: " + className, e);
+            return null;
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to load main class: " + className, e);
+            return null;
+        }
+    }
+    
+    private Object createPluginInstance(Class<?> mainClass) {
+        try {
+            Object instance = mainClass.newInstance();
+            LogUtils.logDebug(TAG, "Created plugin instance: " + mainClass.getSimpleName());
+            return instance;
+            
+        } catch (InstantiationException e) {
+            LogUtils.logError(TAG, "Failed to instantiate plugin class (no default constructor?)", e);
+            return null;
+        } catch (IllegalAccessException e) {
+            LogUtils.logError(TAG, "Cannot access plugin class constructor", e);
+            return null;
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to create plugin instance", e);
+            return null;
+        }
+    }
+    
+    /**
+     * Initialize resource tracking for a plugin
+     */
+    private void initializePluginResources(String pluginId) {
+        pluginResources.put(pluginId, new ArrayList<>());
+    }
+    
+    /**
+     * Register a resource with a plugin for cleanup tracking
+     */
+    public void registerPluginResource(String pluginId, Object resource) {
+        List<WeakReference<Object>> resources = pluginResources.get(pluginId);
+        if (resources != null) {
+            resources.add(new WeakReference<>(resource));
+        }
+    }
+    
+    /**
+     * Unload a plugin and clean up its class loader
+     */
+    public boolean unloadPlugin(String pluginId) {
+        try {
+            cleanupPluginResources(pluginId);
+            
+            ClassLoader classLoader = classLoaders.remove(pluginId);
+            if (classLoader != null) {
+                loadTimes.remove(pluginId);
+                pluginResources.remove(pluginId);
+                
+                System.gc();
+                
+                LogUtils.logInfo(TAG, "Unloaded plugin class loader: " + pluginId);
+                return true;
+            }
+            return false;
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to unload plugin: " + pluginId, e);
+            return false;
+        }
+    }
+    
+    /**
+     * Clean up plugin resources
+     */
+    private void cleanupPluginResources(String pluginId) {
+        List<WeakReference<Object>> resources = pluginResources.get(pluginId);
+        if (resources != null) {
+            for (WeakReference<Object> ref : resources) {
+                Object resource = ref.get();
+                if (resource != null) {
+                    try {
+                        if (resource instanceof AutoCloseable) {
+                            ((AutoCloseable) resource).close();
+                        }
+                    } catch (Exception e) {
+                        LogUtils.logError(TAG, "Failed to close plugin resource", e);
+                    }
+                }
+            }
+            resources.clear();
+        }
+    }
+    
+    /**
+     * Get class loader for a specific plugin
+     */
+    public ClassLoader getPluginClassLoader(String pluginId) {
+        return classLoaders.get(pluginId);
+    }
+    
+    /**
+     * Load additional classes from a plugin
+     */
+    public Class<?> loadPluginClass(String pluginId, String className) {
+        ClassLoader classLoader = classLoaders.get(pluginId);
+        if (classLoader == null) {
+            LogUtils.logError(TAG, "No class loader found for plugin: " + pluginId);
+            return null;
+        }
+        
+        try {
+            return classLoader.loadClass(className);
+        } catch (ClassNotFoundException e) {
+            LogUtils.logError(TAG, "Class not found in plugin: " + className, e);
+            return null;
+        }
+    }
+    
+    /**
+     * Invoke a method on a plugin class
+     */
+    public Object invokePluginMethod(String pluginId, String className, String methodName, Object... args) {
+        try {
+            Class<?> clazz = loadPluginClass(pluginId, className);
+            if (clazz == null) {
+                return null;
+            }
+            
+            Method method = findMethod(clazz, methodName, args);
+            if (method == null) {
+                LogUtils.logError(TAG, "Method not found: " + methodName);
+                return null;
+            }
+            
+            Object instance = null;
+            if (!java.lang.reflect.Modifier.isStatic(method.getModifiers())) {
+                instance = clazz.newInstance();
+            }
+            
+            return method.invoke(instance, args);
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to invoke plugin method: " + methodName, e);
+            return null;
+        }
+    }
+    
+    private Method findMethod(Class<?> clazz, String methodName, Object... args) {
+        Method[] methods = clazz.getDeclaredMethods();
+        
+        for (Method method : methods) {
+            if (method.getName().equals(methodName) && method.getParameterTypes().length == args.length) {
+                return method;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get all loaded plugin class loaders
+     */
+    public Map<String, ClassLoader> getAllClassLoaders() {
+        return new ConcurrentHashMap<>(classLoaders);
+    }
+    
+    /**
+     * Get plugin load statistics
+     */
+    public PluginLoadStats getPluginStats(String pluginId) {
+        return new PluginLoadStats(
+            loadTimes.get(pluginId),
+            loadCounts.getOrDefault(pluginId, 0),
+            classLoaders.containsKey(pluginId)
+        );
+    }
+    
+    /**
+     * Get all plugin IDs currently loaded
+     */
+    public List<String> getLoadedPluginIds() {
+        return new ArrayList<>(classLoaders.keySet());
+    }
+    
+    /**
+     * Check if a plugin is currently loaded
+     */
+    public boolean isPluginLoaded(String pluginId) {
+        return classLoaders.containsKey(pluginId);
+    }
+    
+    /**
+     * Get the number of loaded plugins
+     */
+    public int getLoadedPluginCount() {
+        return classLoaders.size();
+    }
+    
+    /**
+     * Reload a plugin (unload then load again)
+     */
+    public PluginLoadResult reloadPlugin(PluginInfo pluginInfo) {
+        LogUtils.logInfo(TAG, "Reloading plugin: " + pluginInfo.name);
+        
+        if (isPluginLoaded(pluginInfo.id)) {
+            unloadPlugin(pluginInfo.id);
+        }
+        
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
+        return loadPlugin(pluginInfo);
+    }
+    
+    /**
+     * Clean up orphaned DEX files from previous sessions
+     */
+    private void cleanupOrphanedDexFiles() {
+        try {
+            File[] dexFiles = optimizedDirectory.listFiles();
+            if (dexFiles != null) {
+                long currentTime = System.currentTimeMillis();
+                long maxAge = 7 * 24 * 60 * 60 * 1000L; // 7 days
+                
+                for (File file : dexFiles) {
+                    if (currentTime - file.lastModified() > maxAge) {
+                        if (file.delete()) {
+                            LogUtils.logDebug(TAG, "Cleaned up orphaned DEX file: " + file.getName());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to cleanup orphaned DEX files", e);
+        }
+    }
+    
+    /**
+     * Force cleanup of all resources
+     */
+    public void forceCleanup() {
+        for (String pluginId : new ArrayList<>(classLoaders.keySet())) {
+            unloadPlugin(pluginId);
+        }
+        
+        System.gc();
+        System.runFinalization();
+        
+        LogUtils.logInfo(TAG, "Force cleanup completed");
+    }
+    
+    /**
+     * Clean up all class loaders and resources
+     */
+    public void cleanup() {
+        for (String pluginId : new ArrayList<>(classLoaders.keySet())) {
+            cleanupPluginResources(pluginId);
+        }
+        
+        classLoaders.clear();
+        loadTimes.clear();
+        loadCounts.clear();
+        pluginResources.clear();
+        
+        LogUtils.logInfo(TAG, "Plugin loader cleanup completed");
+    }
+    
+    /**
+     * Plugin load result container
+     */
+    public static class PluginLoadResult {
+        public final boolean success;
+        public final String errorMessage;
+        public final Object pluginInstance;
+        public final ClassLoader classLoader;
+        
+        private PluginLoadResult(boolean success, String errorMessage, Object pluginInstance, ClassLoader classLoader) {
+            this.success = success;
+            this.errorMessage = errorMessage;
+            this.pluginInstance = pluginInstance;
+            this.classLoader = classLoader;
+        }
+        
+        public static PluginLoadResult success(Object pluginInstance, ClassLoader classLoader) {
+            return new PluginLoadResult(true, null, pluginInstance, classLoader);
+        }
+        
+        public static PluginLoadResult failure(String errorMessage) {
+            return new PluginLoadResult(false, errorMessage, null, null);
+        }
+    }
+    
+    /**
+     * Plugin load statistics
+     */
+    public static class PluginLoadStats {
+        public final Long loadTime;
+        public final int loadCount;
+        public final boolean currentlyLoaded;
+        
+        public PluginLoadStats(Long loadTime, int loadCount, boolean currentlyLoaded) {
+            this.loadTime = loadTime;
+            this.loadCount = loadCount;
+            this.currentlyLoaded = currentlyLoaded;
+        }
+        
+        public long getUptime() {
+            if (loadTime != null && currentlyLoaded) {
+                return System.currentTimeMillis() - loadTime;
+            }
+            return 0;
+        }
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginLoaderService.java
+package com.axiomloader.modding;
+
+import android.app.Service;
+import android.content.Intent;
+import android.os.Binder;
+import android.os.IBinder;
+import com.axiomloader.utils.LogUtils;
+
+public class PluginLoaderService extends Service {
+    
+    private static final String TAG = "PluginLoaderService";
+    private final IBinder binder = new LocalBinder();
+    private PluginManager pluginManager;
+    
+    public class LocalBinder extends Binder {
+        PluginLoaderService getService() {
+            return PluginLoaderService.this;
+        }
+    }
+    
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        pluginManager = PluginManager.getInstance();
+        LogUtils.logInfo(TAG, "PluginLoaderService created");
+    }
+    
+    @Override
+    public IBinder onBind(Intent intent) {
+        return binder;
+    }
+    
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        LogUtils.logInfo(TAG, "PluginLoaderService started");
+        return START_STICKY;
+    }
+    
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LogUtils.logInfo(TAG, "PluginLoaderService destroyed");
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginManager.java
+package com.axiomloader.modding;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import com.axiomloader.BuildConfig;
+import com.axiomloader.utils.LogUtils;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import dalvik.system.DexClassLoader;
+import dalvik.system.PathClassLoader;
+import timber.log.Timber;
+
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+/**
+ * PluginManager - Central management system for DEX-based plugins
+ * Handles plugin discovery, loading, lifecycle management, and security
+ * 
+ * FIXED: Initialization order issue resolved - initialized flag is now set
+ * BEFORE any operations that depend on it
+ */
+public class PluginManager {
+    
+    private static final String TAG = "PluginManager";
+    private static final String PREFS_NAME = "axiom_plugin_prefs";
+    private static final String PLUGIN_DIR_NAME = "axiom_plugins";
+    private static final String PLUGIN_MANIFEST_FILE = "plugin.json";
+    private static final String PLUGIN_DEX_EXTENSION = ".dex";
+    private static final String PLUGIN_APK_EXTENSION = ".apk";
+    private static final String PLUGIN_JAR_EXTENSION = ".jar";
+    
+    // Singleton instance
+    private static volatile PluginManager instance;
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
+    
+    // Core components
+    private Context applicationContext;
+    private SharedPreferences preferences;
+    private ExecutorService executorService;
+    private Gson gson;
+    private PluginSecurityManager securityManager;
+    
+    // Plugin storage
+    private final Map<String, PluginInfo> installedPlugins;
+    private final Map<String, PluginInfo> loadedPlugins;
+    private final Map<String, Object> pluginInstances;
+    private final Map<String, ClassLoader> pluginClassLoaders;
+    private final Set<String> enabledPlugins;
+    
+    // Configuration
+    private volatile boolean pluginSystemEnabled;
+    private File pluginDirectory;
+    private File pluginCacheDirectory;
+    private boolean developerModeEnabled;
+    private boolean hotReloadEnabled;
+    private boolean securityChecksEnabled = true;
+    
+    // Statistics
+    private int totalLoadAttempts = 0;
+    private int successfulLoads = 0;
+    private int failedLoads = 0;
+    private long lastScanTime = 0;
+    
+    private PluginManager() {
+        installedPlugins = new ConcurrentHashMap<>();
+        loadedPlugins = new ConcurrentHashMap<>();
+        pluginInstances = new ConcurrentHashMap<>();
+        pluginClassLoaders = new ConcurrentHashMap<>();
+        enabledPlugins = Collections.synchronizedSet(new HashSet<>());
+        executorService = Executors.newCachedThreadPool();
+        gson = new Gson();
+    }
+    
+    public static PluginManager getInstance() {
+        if (instance == null) {
+            synchronized (PluginManager.class) {
+                if (instance == null) {
+                    instance = new PluginManager();
+                }
+            }
+        }
+        return instance;
+    }
+    
+    /**
+     * Initialize the PluginManager
+     * ✅ FIXED: Sets initialized flag BEFORE any dependent operations
+     */
+    public synchronized void initialize(Context context) {
+        if (initialized.get()) {
+            LogUtils.logWarning(TAG, "PluginManager already initialized");
+            return;
+        }
+        
+        try {
+            LogUtils.logInfo(TAG, "Starting PluginManager initialization...");
+            
+            this.applicationContext = context.getApplicationContext();
+            this.preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            
+            // Initialize security manager
+            securityManager = new PluginSecurityManager(context);
+            LogUtils.logInfo(TAG, "Security manager initialized");
+            
+            // Setup directories
+            setupPluginDirectories();
+            LogUtils.logInfo(TAG, "Plugin directories setup complete");
+            
+            // Load preferences
+            loadPreferences();
+            LogUtils.logInfo(TAG, "Preferences loaded");
+            
+            // ✅ CRITICAL FIX: Set initialized flag BEFORE scanning
+            // This prevents the circular dependency error
+            initialized.set(true);
+            LogUtils.logInfo(TAG, "PluginManager core initialization complete - ready for operations");
+            
+            // Now it's safe to scan for existing plugins
+            if (pluginSystemEnabled) {
+                try {
+                    int foundPlugins = scanForPlugins();
+                    LogUtils.logInfo(TAG, String.format("Initial plugin scan completed - found %d plugins", foundPlugins));
+                } catch (Exception e) {
+                    LogUtils.logError(TAG, "Error during initial plugin scan (non-fatal)", e);
+                    // Don't fail initialization if scan fails - the system is still usable
+                }
+            } else {
+                LogUtils.logInfo(TAG, "Plugin system disabled - skipping initial scan");
+            }
+            
+            LogUtils.logInfo(TAG, "PluginManager initialization successful");
+            
+        } catch (Exception e) {
+            initialized.set(false); // Reset flag on failure
+            LogUtils.logError(TAG, "Failed to initialize PluginManager", e);
+            throw new RuntimeException("PluginManager initialization failed", e);
+        }
+    }
+    
+    private void setupPluginDirectories() {
+        try {
+            // Main plugin directory
+            pluginDirectory = new File(applicationContext.getExternalFilesDir(null), PLUGIN_DIR_NAME);
+            if (!pluginDirectory.exists()) {
+                boolean created = pluginDirectory.mkdirs();
+                if (!created) {
+                    throw new IOException("Failed to create plugin directory");
+                }
+            }
+            
+            // Cache directory for DEX optimization
+            pluginCacheDirectory = new File(applicationContext.getCacheDir(), "plugin_dex");
+            if (!pluginCacheDirectory.exists()) {
+                boolean created = pluginCacheDirectory.mkdirs();
+                if (!created) {
+                    throw new IOException("Failed to create plugin cache directory");
+                }
+            }
+            
+            // Create subdirectories
+            createSubDirectories();
+            
+            LogUtils.logInfo(TAG, "Plugin directory: " + pluginDirectory.getAbsolutePath());
+            LogUtils.logInfo(TAG, "Cache directory: " + pluginCacheDirectory.getAbsolutePath());
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to setup plugin directories", e);
+            throw new RuntimeException("Plugin directory setup failed", e);
+        }
+    }
+    
+    private void createSubDirectories() {
+        String[] subDirs = {"installed", "temp", "data", "cache", "logs", "backups"};
+        
+        for (String subDir : subDirs) {
+            File dir = new File(pluginDirectory, subDir);
+            if (!dir.exists() && !dir.mkdirs()) {
+                LogUtils.logWarning(TAG, "Failed to create subdirectory: " + subDir);
+            }
+        }
+    }
+    
+    private void loadPreferences() {
+        pluginSystemEnabled = preferences.getBoolean("plugin_system_enabled", true);
+        developerModeEnabled = preferences.getBoolean("developer_mode_enabled", BuildConfig.DEBUG);
+        hotReloadEnabled = preferences.getBoolean("hot_reload_enabled", BuildConfig.DEBUG);
+        securityChecksEnabled = preferences.getBoolean("security_checks_enabled", true);
+        
+        // Load enabled plugins list
+        Set<String> enabledSet = preferences.getStringSet("enabled_plugins", new HashSet<>());
+        enabledPlugins.clear();
+        if (enabledSet != null) {
+            enabledPlugins.addAll(enabledSet);
+        }
+        
+        LogUtils.logInfo(TAG, String.format("Loaded preferences - System: %s, Developer: %s, Enabled plugins: %d",
+                pluginSystemEnabled, developerModeEnabled, enabledPlugins.size()));
+    }
+    
+    private void savePreferences() {
+        preferences.edit()
+                .putBoolean("plugin_system_enabled", pluginSystemEnabled)
+                .putBoolean("developer_mode_enabled", developerModeEnabled)
+                .putBoolean("hot_reload_enabled", hotReloadEnabled)
+                .putBoolean("security_checks_enabled", securityChecksEnabled)
+                .putStringSet("enabled_plugins", new HashSet<>(enabledPlugins))
+                .apply();
+    }
+    
+    /**
+     * Scan for plugins in the plugin directory
+     * ✅ FIXED: Now safely handles being called before full initialization
+     */
+    public int scanForPlugins() {
+        if (!initialized.get()) {
+            LogUtils.logWarning(TAG, "PluginManager not fully initialized yet - scan may be limited");
+            // Don't throw exception - just log warning and continue
+            // This allows the method to work during initialization
+        }
+        
+        lastScanTime = System.currentTimeMillis();
+        int foundPlugins = 0;
+        
+        try {
+            LogUtils.logInfo(TAG, "Starting plugin scan in: " + pluginDirectory.getAbsolutePath());
+            
+            File[] pluginFiles = pluginDirectory.listFiles((dir, name) ->
+                    name.endsWith(PLUGIN_DEX_EXTENSION) ||
+                    name.endsWith(PLUGIN_APK_EXTENSION) ||
+                    name.endsWith(PLUGIN_JAR_EXTENSION));
+            
+            if (pluginFiles == null || pluginFiles.length == 0) {
+                LogUtils.logInfo(TAG, "No plugin files found in directory");
+                return 0;
+            }
+            
+            LogUtils.logInfo(TAG, "Found " + pluginFiles.length + " potential plugin files");
+            
+            for (File pluginFile : pluginFiles) {
+                try {
+                    LogUtils.logInfo(TAG, "Discovering plugin: " + pluginFile.getName());
+                    if (discoverPlugin(pluginFile)) {
+                        foundPlugins++;
+                    }
+                } catch (Exception e) {
+                    LogUtils.logError(TAG, "Failed to discover plugin: " + pluginFile.getName(), e);
+                }
+            }
+            
+            LogUtils.logInfo(TAG, String.format("Plugin scan completed - Found: %d new, Total: %d",
+                    foundPlugins, installedPlugins.size()));
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Plugin scan failed", e);
+        }
+        
+        return foundPlugins;
+    }
+    
+    public int scanForNewPlugins() {
+        Set<String> existingPlugins = new HashSet<>(installedPlugins.keySet());
+        int totalFound = scanForPlugins();
+        
+        // Count only new plugins
+        int newPlugins = 0;
+        for (String pluginId : installedPlugins.keySet()) {
+            if (!existingPlugins.contains(pluginId)) {
+                newPlugins++;
+            }
+        }
+        
+        return newPlugins;
+    }
+    
+    private boolean discoverPlugin(File pluginFile) {
+        try {
+            // Look for manifest file
+            File manifestFile = new File(pluginFile.getParentFile(),
+                    pluginFile.getName().replaceAll("\\.(dex|apk|jar)$", "_manifest.json"));
+            
+            if (!manifestFile.exists()) {
+                // Try to extract manifest from archive if it's an APK/JAR
+                manifestFile = extractManifestFromArchive(pluginFile);
+            }
+            
+            if (manifestFile == null || !manifestFile.exists()) {
+                LogUtils.logWarning(TAG, "No manifest found for: " + pluginFile.getName());
+                return false;
+            }
+            
+            // Parse manifest
+            PluginManifest manifest = parseManifest(manifestFile);
+            if (manifest == null) {
+                return false;
+            }
+            
+            // Create plugin info
+            PluginInfo pluginInfo = new PluginInfo();
+            pluginInfo.id = manifest.id;
+            pluginInfo.name = manifest.name;
+            pluginInfo.version = manifest.version;
+            pluginInfo.author = manifest.author;
+            pluginInfo.description = manifest.description;
+            pluginInfo.apiVersion = manifest.apiVersion;
+            pluginInfo.mainClass = manifest.mainClass;
+            pluginInfo.pluginFile = pluginFile;
+            pluginInfo.manifestFile = manifestFile;
+            pluginInfo.size = pluginFile.length();
+            pluginInfo.lastModified = pluginFile.lastModified();
+            pluginInfo.status = PluginStatus.DISCOVERED;
+            pluginInfo.permissions = manifest.permissions != null ? manifest.permissions : new ArrayList<>();
+            
+            // Validate plugin
+            if (!validatePlugin(pluginInfo)) {
+                return false;
+            }
+            
+            // Store plugin info
+            installedPlugins.put(pluginInfo.id, pluginInfo);
+            LogUtils.logInfo(TAG, String.format("Discovered plugin: %s v%s", pluginInfo.name, pluginInfo.version));
+            
+            return true;
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to discover plugin: " + pluginFile.getName(), e);
+            return false;
+        }
+    }
+    
+    private File extractManifestFromArchive(File archiveFile) {
+        // For now, return null - this would need ZIP handling for APK/JAR files
+        // Implementation would extract plugin.json from the archive
+        return null;
+    }
+    
+    private PluginManifest parseManifest(File manifestFile) {
+        try (FileReader reader = new FileReader(manifestFile)) {
+            PluginManifest manifest = gson.fromJson(reader, PluginManifest.class);
+            
+            // Validate required fields
+            if (manifest.id == null || manifest.id.isEmpty() ||
+                manifest.name == null || manifest.name.isEmpty() ||
+                manifest.version == null || manifest.version.isEmpty() ||
+                manifest.mainClass == null || manifest.mainClass.isEmpty()) {
+                
+                LogUtils.logError(TAG, "Invalid manifest - missing required fields");
+                return null;
+            }
+            
+            return manifest;
+            
+        } catch (IOException | JsonSyntaxException e) {
+            LogUtils.logError(TAG, "Failed to parse manifest: " + manifestFile.getName(), e);
+            return null;
+        }
+    }
+    
+    private boolean validatePlugin(PluginInfo pluginInfo) {
+        try {
+            // Check API version compatibility
+            if (pluginInfo.apiVersion > BuildConfig.PLUGIN_API_VERSION) {
+                LogUtils.logError(TAG, String.format("Plugin %s requires API version %d, current is %d",
+                        pluginInfo.name, pluginInfo.apiVersion, BuildConfig.PLUGIN_API_VERSION));
+                return false;
+            }
+            
+            // Security checks
+            if (securityChecksEnabled && !securityManager.validatePlugin(pluginInfo)) {
+                LogUtils.logError(TAG, "Plugin failed security validation: " + pluginInfo.name);
+                return false;
+            }
+            
+            return true;
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Plugin validation failed: " + pluginInfo.name, e);
+            return false;
+        }
+    }
+    
+    /**
+     * Load a specific plugin
+     */
+    public boolean loadPlugin(String pluginId) {
+        if (!initialized.get()) {
+            LogUtils.logError(TAG, "Cannot load plugin - PluginManager not initialized");
+            return false;
+        }
+        
+        if (!pluginSystemEnabled) {
+            LogUtils.logWarning(TAG, "Plugin system disabled - cannot load plugin: " + pluginId);
+            return false;
+        }
+        
+        PluginInfo pluginInfo = installedPlugins.get(pluginId);
+        if (pluginInfo == null) {
+            LogUtils.logError(TAG, "Plugin not found: " + pluginId);
+            return false;
+        }
+        
+        if (loadedPlugins.containsKey(pluginId)) {
+            LogUtils.logWarning(TAG, "Plugin already loaded: " + pluginId);
+            return true;
+        }
+        
+        totalLoadAttempts++;
+        
+        try {
+            LogUtils.logInfo(TAG, "Loading plugin: " + pluginInfo.name);
+            
+            // Create class loader
+            String dexPath = pluginInfo.pluginFile.getAbsolutePath();
+            String optimizedDirectory = pluginCacheDirectory.getAbsolutePath();
+            String librarySearchPath = null;
+            ClassLoader parent = applicationContext.getClassLoader();
+            
+            DexClassLoader classLoader = new DexClassLoader(dexPath, optimizedDirectory, librarySearchPath, parent);
+            
+            // Load main class
+            Class<?> mainClass = classLoader.loadClass(pluginInfo.mainClass);
+            
+            // Create plugin instance
+            Object pluginInstance = mainClass.newInstance();
+            
+            // Initialize plugin if it implements PluginInterface
+            if (pluginInstance instanceof PluginInterface) {
+                PluginInterface plugin = (PluginInterface) pluginInstance;
+                plugin.onLoad(applicationContext);
+            }
+            
+            // Store references
+            pluginClassLoaders.put(pluginId, classLoader);
+            pluginInstances.put(pluginId, pluginInstance);
+            pluginInfo.status = PluginStatus.LOADED;
+            loadedPlugins.put(pluginId, pluginInfo);
+            
+            successfulLoads++;
+            LogUtils.logInfo(TAG, String.format("Plugin loaded successfully: %s v%s", 
+                    pluginInfo.name, pluginInfo.version));
+            
+            return true;
+            
+        } catch (Exception e) {
+            failedLoads++;
+            pluginInfo.status = PluginStatus.ERROR;
+            pluginInfo.errorMessage = e.getMessage();
+            LogUtils.logError(TAG, "Failed to load plugin: " + pluginInfo.name, e);
+            return false;
+        }
+    }
+    
+    /**
+     * Unload a specific plugin
+     */
+    public boolean unloadPlugin(String pluginId) {
+        PluginInfo pluginInfo = loadedPlugins.get(pluginId);
+        if (pluginInfo == null) {
+            LogUtils.logWarning(TAG, "Plugin not loaded: " + pluginId);
+            return false;
+        }
+        
+        try {
+            LogUtils.logInfo(TAG, "Unloading plugin: " + pluginInfo.name);
+            
+            // Call plugin's unload method if it implements PluginInterface
+            Object pluginInstance = pluginInstances.get(pluginId);
+            if (pluginInstance instanceof PluginInterface) {
+                PluginInterface plugin = (PluginInterface) pluginInstance;
+                plugin.onUnload();
+            }
+            
+            // Clean up references
+            pluginInstances.remove(pluginId);
+            pluginClassLoaders.remove(pluginId);
+            loadedPlugins.remove(pluginId);
+            pluginInfo.status = PluginStatus.UNLOADED;
+            
+            LogUtils.logInfo(TAG, "Plugin unloaded: " + pluginInfo.name);
+            return true;
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to unload plugin: " + pluginInfo.name, e);
+            return false;
+        }
+    }
+    
+    /**
+     * Enable/disable plugin
+     */
+    public void enablePlugin(String pluginId) {
+        enabledPlugins.add(pluginId);
+        savePreferences();
+        
+        if (pluginSystemEnabled) {
+            loadPlugin(pluginId);
+        }
+    }
+    
+    public void disablePlugin(String pluginId) {
+        enabledPlugins.remove(pluginId);
+        savePreferences();
+        unloadPlugin(pluginId);
+    }
+    
+    /**
+     * Load all enabled plugins
+     */
+    public void loadEnabledPlugins() {
+        if (!initialized.get()) {
+            LogUtils.logWarning(TAG, "Cannot load plugins - PluginManager not initialized");
+            return;
+        }
+        
+        if (!pluginSystemEnabled) {
+            LogUtils.logInfo(TAG, "Plugin system disabled - not loading plugins");
+            return;
+        }
+        
+        LogUtils.logInfo(TAG, "Loading " + enabledPlugins.size() + " enabled plugins");
+        
+        for (String pluginId : enabledPlugins) {
+            if (installedPlugins.containsKey(pluginId)) {
+                loadPlugin(pluginId);
+            } else {
+                LogUtils.logWarning(TAG, "Enabled plugin not found: " + pluginId);
+            }
+        }
+    }
+    
+    // System management methods
+    public void enablePluginSystem() {
+        pluginSystemEnabled = true;
+        savePreferences();
+        loadEnabledPlugins();
+    }
+    
+    public void disablePluginSystem() {
+        // Unload all plugins
+        new ArrayList<>(loadedPlugins.keySet()).forEach(this::unloadPlugin);
+        pluginSystemEnabled = false;
+        savePreferences();
+    }
+    
+    public void refreshPlugins() {
+        scanForPlugins();
+    }
+    
+    // Getters
+    public boolean isInitialized() {
+        return initialized.get();
+    }
+    
+    public boolean isPluginSystemEnabled() {
+        return pluginSystemEnabled;
+    }
+    
+    public File getPluginDirectory() {
+        return pluginDirectory;
+    }
+    
+    public int getTotalPluginCount() {
+        return installedPlugins.size();
+    }
+    
+    public int getEnabledPluginCount() {
+        return enabledPlugins.size();
+    }
+    
+    public int getLoadedPluginCount() {
+        return loadedPlugins.size();
+    }
+    
+    public List<PluginInfo> getAllPlugins() {
+        return new ArrayList<>(installedPlugins.values());
+    }
+    
+    public List<PluginInfo> getLoadedPlugins() {
+        return new ArrayList<>(loadedPlugins.values());
+    }
+    
+    public PluginInfo getPluginInfo(String pluginId) {
+        return installedPlugins.get(pluginId);
+    }
+    
+    public Object getPluginInstance(String pluginId) {
+        return pluginInstances.get(pluginId);
+    }
+    
+    public boolean isPluginLoaded(String pluginId) {
+        return loadedPlugins.containsKey(pluginId);
+    }
+    
+    public boolean isPluginEnabled(String pluginId) {
+        return enabledPlugins.contains(pluginId);
+    }
+    
+    // Statistics
+    public int getTotalLoadAttempts() {
+        return totalLoadAttempts;
+    }
+    
+    public int getSuccessfulLoads() {
+        return successfulLoads;
+    }
+    
+    public int getFailedLoads() {
+        return failedLoads;
+    }
+    
+    public long getLastScanTime() {
+        return lastScanTime;
+    }
+    
+    // Memory management
+    public void onLowMemory() {
+        LogUtils.logWarning(TAG, "Low memory - notifying plugins");
+        
+        // Notify all loaded plugins
+        for (Object instance : pluginInstances.values()) {
+            if (instance instanceof PluginInterface) {
+                try {
+                    ((PluginInterface) instance).onLowMemory();
+                } catch (Exception e) {
+                    LogUtils.logError(TAG, "Plugin onLowMemory failed", e);
+                }
+            }
+        }
+    }
+    
+    public void onTrimMemory(int level) {
+        LogUtils.logInfo(TAG, "Trim memory level: " + level);
+        
+        // Notify all loaded plugins
+        for (Object instance : pluginInstances.values()) {
+            if (instance instanceof PluginInterface) {
+                try {
+                    ((PluginInterface) instance).onTrimMemory(level);
+                } catch (Exception e) {
+                    LogUtils.logError(TAG, "Plugin onTrimMemory failed", e);
+                }
+            }
+        }
+    }
+    
+    // Cleanup
+    public void shutdown() {
+        try {
+            LogUtils.logInfo(TAG, "Shutting down PluginManager");
+            
+            // Unload all plugins
+            new ArrayList<>(loadedPlugins.keySet()).forEach(this::unloadPlugin);
+            
+            // Shutdown executor
+            if (executorService != null && !executorService.isShutdown()) {
+                executorService.shutdown();
+            }
+            
+            // Clear all collections
+            installedPlugins.clear();
+            loadedPlugins.clear();
+            pluginInstances.clear();
+            pluginClassLoaders.clear();
+            enabledPlugins.clear();
+            
+            // Reset initialized flag
+            initialized.set(false);
+            
+            LogUtils.logInfo(TAG, "PluginManager shutdown completed");
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Error during shutdown", e);
+        }
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginManagerActivity.java
+package com.axiomloader.modding;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import com.axiomloader.R;
+import com.axiomloader.databinding.ActivityPluginManagerBinding;
+import com.axiomloader.utils.LogUtils;
+import timber.log.Timber;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class PluginManagerActivity extends AppCompatActivity {
+    
+    private ActivityPluginManagerBinding binding;
+    private PluginManager pluginManager;
+    private PluginAdapter pluginAdapter;
+    private List<PluginInfo> pluginList;
+    private static final String TAG = "PluginManagerActivity";
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        binding = ActivityPluginManagerBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle(R.string.plugin_manager_title);
+        }
+        
+        pluginManager = PluginManager.getInstance();
+        pluginList = new ArrayList<>();
+        
+        setupRecyclerView();
+        setupButtons();
+        loadPlugins();
+        
+        LogUtils.logInfo(TAG, "PluginManagerActivity created");
+    }
+    
+    private void setupRecyclerView() {
+        pluginAdapter = new PluginAdapter(this, pluginList, new PluginAdapter.PluginActionListener() {
+            @Override
+            public void onPluginClick(PluginInfo plugin) {
+                showPluginDetails(plugin);
+            }
+            
+            @Override
+            public void onEnableToggle(PluginInfo plugin, boolean enabled) {
+                togglePlugin(plugin, enabled);
+            }
+            
+            @Override
+            public void onPluginSettings(PluginInfo plugin) {
+                openPluginSettings(plugin);
+            }
+            
+            @Override
+            public void onPluginUninstall(PluginInfo plugin) {
+                showUninstallDialog(plugin);
+            }
+        });
+        
+        binding.recyclerViewPlugins.setLayoutManager(new LinearLayoutManager(this));
+        binding.recyclerViewPlugins.setAdapter(pluginAdapter);
+    }
+    
+    private void setupButtons() {
+        binding.btnInstallPlugin.setOnClickListener(v -> {
+            // Open file picker for plugin installation
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("*/*");
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/java-archive", "application/vnd.android.package-archive"});
+            startActivityForResult(Intent.createChooser(intent, "Select Plugin File"), 100);
+        });
+        
+        binding.btnScanPlugins.setOnClickListener(v -> scanForPlugins());
+        
+        binding.btnRefreshList.setOnClickListener(v -> loadPlugins());
+        
+        binding.fabAddPlugin.setOnClickListener(v -> {
+            Intent intent = new Intent(this, PluginDevelopmentActivity.class);
+            startActivity(intent);
+        });
+    }
+    
+    private void loadPlugins() {
+        binding.progressBar.setVisibility(View.VISIBLE);
+        binding.tvNoPlugins.setVisibility(View.GONE);
+        
+        new Thread(() -> {
+            try {
+                List<PluginInfo> allPlugins = pluginManager.getAllPlugins();
+                
+                runOnUiThread(() -> {
+                    binding.progressBar.setVisibility(View.GONE);
+                    pluginList.clear();
+                    pluginList.addAll(allPlugins);
+                    pluginAdapter.notifyDataSetChanged();
+                    
+                    if (pluginList.isEmpty()) {
+                        binding.tvNoPlugins.setVisibility(View.VISIBLE);
+                    }
+                    
+                    updateStats();
+                });
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Failed to load plugins", e);
+                runOnUiThread(() -> {
+                    binding.progressBar.setVisibility(View.GONE);
+                    Toast.makeText(this, "Failed to load plugins", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+    
+    private void scanForPlugins() {
+        binding.btnScanPlugins.setEnabled(false);
+        binding.btnScanPlugins.setText("Scanning...");
+        
+        new Thread(() -> {
+            try {
+                int foundPlugins = pluginManager.scanForNewPlugins();
+                
+                runOnUiThread(() -> {
+                    binding.btnScanPlugins.setEnabled(true);
+                    binding.btnScanPlugins.setText("Scan Plugins");
+                    
+                    String message = foundPlugins > 0 ? 
+                        "Found " + foundPlugins + " new plugins" : 
+                        "No new plugins found";
+                    
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                    
+                    if (foundPlugins > 0) {
+                        loadPlugins();
+                    }
+                });
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Plugin scan failed", e);
+                runOnUiThread(() -> {
+                    binding.btnScanPlugins.setEnabled(true);
+                    binding.btnScanPlugins.setText("Scan Plugins");
+                    Toast.makeText(this, "Plugin scan failed", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+    
+    private void togglePlugin(PluginInfo plugin, boolean enabled) {
+        new Thread(() -> {
+            try {
+                if (enabled) {
+                    pluginManager.enablePlugin(plugin.id);
+                    LogUtils.logInfo(TAG, "Plugin enabled: " + plugin.name);
+                } else {
+                    pluginManager.disablePlugin(plugin.id);
+                    LogUtils.logInfo(TAG, "Plugin disabled: " + plugin.name);
+                }
+                
+                runOnUiThread(() -> {
+                    Toast.makeText(this, 
+                        plugin.name + (enabled ? " enabled" : " disabled"), 
+                        Toast.LENGTH_SHORT).show();
+                    updateStats();
+                });
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Failed to toggle plugin: " + plugin.name, e);
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Failed to toggle plugin", Toast.LENGTH_SHORT).show();
+                    pluginAdapter.notifyDataSetChanged(); // Reset switch state
+                });
+            }
+        }).start();
+    }
+    
+    private void showPluginDetails(PluginInfo plugin) {
+        Intent intent = new Intent(this, PluginInfoActivity.class);
+        intent.putExtra("plugin_id", plugin.id);
+        startActivity(intent);
+    }
+    
+    private void openPluginSettings(PluginInfo plugin) {
+        Intent intent = new Intent(this, PluginSettingsActivity.class);
+        intent.putExtra("plugin_id", plugin.id);
+        startActivity(intent);
+    }
+    
+    private void showUninstallDialog(PluginInfo plugin) {
+        new AlertDialog.Builder(this)
+            .setTitle("Uninstall Plugin")
+            .setMessage("Are you sure you want to uninstall " + plugin.name + "?")
+            .setPositiveButton("Uninstall", (dialog, which) -> uninstallPlugin(plugin))
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+    
+    private void uninstallPlugin(PluginInfo plugin) {
+        new Thread(() -> {
+            try {
+                // First disable the plugin
+                pluginManager.disablePlugin(plugin.id);
+                
+                // Delete plugin files
+                if (plugin.pluginFile != null && plugin.pluginFile.exists()) {
+                    boolean deleted = plugin.pluginFile.delete();
+                    if (!deleted) {
+                        throw new Exception("Failed to delete plugin file");
+                    }
+                }
+                
+                if (plugin.manifestFile != null && plugin.manifestFile.exists()) {
+                    plugin.manifestFile.delete();
+                }
+                
+                // Remove from manager
+                pluginManager.refreshPlugins();
+                
+                runOnUiThread(() -> {
+                    Toast.makeText(this, plugin.name + " uninstalled", Toast.LENGTH_SHORT).show();
+                    loadPlugins();
+                });
+                
+                LogUtils.logInfo(TAG, "Plugin uninstalled: " + plugin.name);
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Failed to uninstall plugin: " + plugin.name, e);
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Failed to uninstall plugin", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+    
+    private void updateStats() {
+        int totalPlugins = pluginManager.getTotalPluginCount();
+        int enabledPlugins = pluginManager.getEnabledPluginCount();
+        int loadedPlugins = pluginManager.getLoadedPluginCount();
+        
+        binding.tvTotalPlugins.setText("Total: " + totalPlugins);
+        binding.tvEnabledPlugins.setText("Enabled: " + enabledPlugins);
+        binding.tvLoadedPlugins.setText("Loaded: " + loadedPlugins);
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        if (requestCode == 100 && resultCode == RESULT_OK && data != null) {
+            // Handle plugin file selection
+            // This would implement plugin installation from file picker
+            Toast.makeText(this, "Plugin installation feature coming soon", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadPlugins();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        binding = null;
+        LogUtils.logInfo(TAG, "PluginManagerActivity destroyed");
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginManifest.java
+package com.axiomloader.modding;
+
+import com.google.gson.annotations.SerializedName;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * PluginManifest - Data structure for plugin.json manifest files
+ * Defines all metadata and configuration for a plugin
+ */
+public class PluginManifest {
+    
+    // Required fields
+    @SerializedName("id")
+    public String id;
+    
+    @SerializedName("name")
+    public String name;
+    
+    @SerializedName("version")
+    public String version;
+    
+    @SerializedName("main_class")
+    public String mainClass;
+    
+    @SerializedName("api_version")
+    public int apiVersion;
+    
+    // Optional metadata
+    @SerializedName("author")
+    public String author;
+    
+    @SerializedName("description")
+    public String description;
+    
+    @SerializedName("website")
+    public String website;
+    
+    @SerializedName("license")
+    public String license;
+    
+    @SerializedName("min_android_version")
+    public int minAndroidVersion = 21; // Default to API 21
+    
+    @SerializedName("target_android_version")
+    public int targetAndroidVersion = 33;
+    
+    // Dependencies
+    @SerializedName("dependencies")
+    public List<PluginDependency> dependencies;
+    
+    // Permissions required by plugin
+    @SerializedName("permissions")
+    public List<String> permissions;
+    
+    // Plugin capabilities and features
+    @SerializedName("features")
+    public List<String> features;
+    
+    // Plugin configuration
+    @SerializedName("config")
+    public Map<String, Object> config;
+    
+    // Plugin assets and resources
+    @SerializedName("assets")
+    public List<String> assets;
+    
+    // Plugin entry points for different hooks
+    @SerializedName("hooks")
+    public Map<String, String> hooks;
+    
+    // Plugin compatibility information
+    @SerializedName("compatibility")
+    public CompatibilityInfo compatibility;
+    
+    // Plugin update information
+    @SerializedName("update_url")
+    public String updateUrl;
+    
+    @SerializedName("download_url")
+    public String downloadUrl;
+    
+    // Plugin signing and security
+    @SerializedName("signature")
+    public String signature;
+    
+    @SerializedName("public_key")
+    public String publicKey;
+    
+    // Plugin categories and tags
+    @SerializedName("category")
+    public String category;
+    
+    @SerializedName("tags")
+    public List<String> tags;
+    
+    // Plugin icon and screenshots
+    @SerializedName("icon")
+    public String icon;
+    
+    @SerializedName("screenshots")
+    public List<String> screenshots;
+    
+    // Plugin metadata
+    @SerializedName("size")
+    public long size;
+    
+    @SerializedName("created_date")
+    public String createdDate;
+    
+    @SerializedName("updated_date")
+    public String updatedDate;
+    
+    /**
+     * Plugin dependency information
+     */
+    public static class PluginDependency {
+        @SerializedName("id")
+        public String id;
+        
+        @SerializedName("name")
+        public String name;
+        
+        @SerializedName("version")
+        public String version;
+        
+        @SerializedName("required")
+        public boolean required = true;
+        
+        @SerializedName("minimum_version")
+        public String minimumVersion;
+        
+        @SerializedName("maximum_version")
+        public String maximumVersion;
+        
+        @SerializedName("download_url")
+        public String downloadUrl;
+        
+        public boolean isVersionCompatible(String installedVersion) {
+            if (installedVersion == null) return false;
+            
+            // Simple version comparison - could be enhanced
+            if (minimumVersion != null && compareVersions(installedVersion, minimumVersion) < 0) {
+                return false;
+            }
+            
+            if (maximumVersion != null && compareVersions(installedVersion, maximumVersion) > 0) {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        private int compareVersions(String v1, String v2) {
+            String[] parts1 = v1.split("\\.");
+            String[] parts2 = v2.split("\\.");
+            
+            int maxLength = Math.max(parts1.length, parts2.length);
+            
+            for (int i = 0; i < maxLength; i++) {
+                int num1 = i < parts1.length ? Integer.parseInt(parts1[i]) : 0;
+                int num2 = i < parts2.length ? Integer.parseInt(parts2[i]) : 0;
+                
+                if (num1 < num2) return -1;
+                if (num1 > num2) return 1;
+            }
+            
+            return 0;
+        }
+    }
+    
+    /**
+     * Plugin compatibility information
+     */
+    public static class CompatibilityInfo {
+        @SerializedName("min_app_version")
+        public String minAppVersion;
+        
+        @SerializedName("max_app_version")
+        public String maxAppVersion;
+        
+        @SerializedName("supported_architectures")
+        public List<String> supportedArchitectures;
+        
+        @SerializedName("blacklisted_devices")
+        public List<String> blacklistedDevices;
+        
+        @SerializedName("required_features")
+        public List<String> requiredFeatures;
+        
+        @SerializedName("supported_android_versions")
+        public List<Integer> supportedAndroidVersions;
+        
+        @SerializedName("requires_root")
+        public boolean requiresRoot = false;
+        
+        @SerializedName("requires_internet")
+        public boolean requiresInternet = false;
+        
+        public boolean isDeviceCompatible(String deviceModel) {
+            if (blacklistedDevices != null && blacklistedDevices.contains(deviceModel)) {
+                return false;
+            }
+            return true;
+        }
+        
+        public boolean isArchitectureSupported(String arch) {
+            if (supportedArchitectures == null || supportedArchitectures.isEmpty()) {
+                return true; // Assume compatible if not specified
+            }
+            return supportedArchitectures.contains(arch);
+        }
+        
+        public boolean isAndroidVersionSupported(int apiLevel) {
+            if (supportedAndroidVersions == null || supportedAndroidVersions.isEmpty()) {
+                return true; // Assume compatible if not specified
+            }
+            return supportedAndroidVersions.contains(apiLevel);
+        }
+    }
+    
+    /**
+     * Validate the manifest for required fields
+     */
+    public boolean isValid() {
+        return id != null && !id.isEmpty() &&
+               name != null && !name.isEmpty() &&
+               version != null && !version.isEmpty() &&
+               mainClass != null && !mainClass.isEmpty() &&
+               apiVersion > 0;
+    }
+    
+    /**
+     * Get display version with name
+     */
+    public String getDisplayVersion() {
+        return name + " v" + version;
+    }
+    
+    /**
+     * Get formatted size string
+     */
+    public String getFormattedSize() {
+        if (size <= 0) return "Unknown";
+        
+        if (size < 1024) {
+            return size + " B";
+        } else if (size < 1024 * 1024) {
+            return String.format("%.1f KB", size / 1024.0);
+        } else {
+            return String.format("%.1f MB", size / (1024.0 * 1024.0));
+        }
+    }
+    
+    /**
+     * Check if plugin has specific permission
+     */
+    public boolean hasPermission(String permission) {
+        return permissions != null && permissions.contains(permission);
+    }
+    
+    /**
+     * Check if plugin has specific feature
+     */
+    public boolean hasFeature(String feature) {
+        return features != null && features.contains(feature);
+    }
+    
+    /**
+     * Get configuration value
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getConfigValue(String key, T defaultValue) {
+        if (config == null || !config.containsKey(key)) {
+            return defaultValue;
+        }
+        
+        try {
+            return (T) config.get(key);
+        } catch (ClassCastException e) {
+            return defaultValue;
+        }
+    }
+    
+    /**
+     * Check if plugin supports hot reload
+     */
+    public boolean supportsHotReload() {
+        return hasFeature("hot_reload");
+    }
+    
+    /**
+     * Check if plugin is a system plugin
+     */
+    public boolean isSystemPlugin() {
+        return hasFeature("system_plugin");
+    }
+    
+    /**
+     * Check if plugin requires restart
+     */
+    public boolean requiresRestart() {
+        return hasFeature("requires_restart");
+    }
+    
+    /**
+     * Get plugin category or default
+     */
+    public String getCategoryOrDefault() {
+        return category != null ? category : "General";
+    }
+    
+    /**
+     * Get plugin author or default
+     */
+    public String getAuthorOrDefault() {
+        return author != null ? author : "Unknown";
+    }
+    
+    /**
+     * Get plugin description or default
+     */
+    public String getDescriptionOrDefault() {
+        return description != null ? description : "No description available";
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("PluginManifest{id='%s', name='%s', version='%s', author='%s', apiVersion=%d}",
+                id, name, version, author, apiVersion);
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        
+        PluginManifest that = (PluginManifest) obj;
+        return id != null ? id.equals(that.id) : that.id == null;
+    }
+    
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginProvider.java
+package com.axiomloader.modding;
+
+import android.content.ContentProvider;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.net.Uri;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.axiomloader.utils.LogUtils;
+
+public class PluginProvider extends ContentProvider {
+    
+    private static final String TAG = "PluginProvider";
+    public static final String AUTHORITY = "com.axiomloader.plugins";
+    public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY);
+    
+    @Override
+    public boolean onCreate() {
+        LogUtils.logInfo(TAG, "PluginProvider created");
+        return true;
+    }
+    
+    @Nullable
+    @Override
+    public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection,
+                        @Nullable String[] selectionArgs, @Nullable String sortOrder) {
+        LogUtils.logDebug(TAG, "Query: " + uri.toString());
+        return null;
+    }
+    
+    @Nullable
+    @Override
+    public String getType(@NonNull Uri uri) {
+        return "vnd.android.cursor.dir/vnd.axiomloader.plugin";
+    }
+    
+    @Nullable
+    @Override
+    public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
+        LogUtils.logDebug(TAG, "Insert: " + uri.toString());
+        return null;
+    }
+    
+    @Override
+    public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
+        LogUtils.logDebug(TAG, "Delete: " + uri.toString());
+        return 0;
+    }
+    
+    @Override
+    public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection,
+                      @Nullable String[] selectionArgs) {
+        LogUtils.logDebug(TAG, "Update: " + uri.toString());
+        return 0;
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginSecurityManager.java
+package com.axiomloader.modding;
+
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import com.axiomloader.utils.LogUtils;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+/**
+ * PluginSecurityManager - Handles security validation and sandboxing for plugins
+ * Provides security checks, permission validation, and threat detection
+ */
+public class PluginSecurityManager {
+    
+    private static final String TAG = "PluginSecurityManager";
+    
+    private final Context context;
+    private final Set<String> trustedSignatures;
+    private final Set<String> blacklistedPlugins;
+    private final Set<String> dangerousPermissions;
+    
+    public PluginSecurityManager(Context context) {
+        this.context = context;
+        this.trustedSignatures = new HashSet<>();
+        this.blacklistedPlugins = new HashSet<>();
+        this.dangerousPermissions = new HashSet<>();
+        
+        initializeDangerousPermissions();
+        loadTrustedSignatures();
+        loadBlacklist();
+    }
+    
+    private void initializeDangerousPermissions() {
+        // System-level dangerous permissions
+        dangerousPermissions.add("android.permission.WRITE_EXTERNAL_STORAGE");
+        dangerousPermissions.add("android.permission.READ_EXTERNAL_STORAGE");
+        dangerousPermissions.add("android.permission.CAMERA");
+        dangerousPermissions.add("android.permission.RECORD_AUDIO");
+        dangerousPermissions.add("android.permission.ACCESS_FINE_LOCATION");
+        dangerousPermissions.add("android.permission.ACCESS_COARSE_LOCATION");
+        dangerousPermissions.add("android.permission.READ_CONTACTS");
+        dangerousPermissions.add("android.permission.WRITE_CONTACTS");
+        dangerousPermissions.add("android.permission.SEND_SMS");
+        dangerousPermissions.add("android.permission.RECEIVE_SMS");
+        dangerousPermissions.add("android.permission.CALL_PHONE");
+        dangerousPermissions.add("android.permission.READ_PHONE_STATE");
+        dangerousPermissions.add("android.permission.SYSTEM_ALERT_WINDOW");
+        dangerousPermissions.add("android.permission.WRITE_SETTINGS");
+        
+        // Custom dangerous permissions for our app
+        dangerousPermissions.add("axiom.permission.MODIFY_SYSTEM");
+        dangerousPermissions.add("axiom.permission.ACCESS_LOGS");
+        dangerousPermissions.add("axiom.permission.INSTALL_PLUGINS");
+        dangerousPermissions.add("axiom.permission.NETWORK_ACCESS");
+    }
+    
+    private void loadTrustedSignatures() {
+        // In a real implementation, these would be loaded from a secure store
+        // For now, we'll use placeholder signatures
+        trustedSignatures.add("TRUSTED_DEVELOPER_1_SHA256");
+        trustedSignatures.add("TRUSTED_DEVELOPER_2_SHA256");
+    }
+    
+    private void loadBlacklist() {
+        // Load known malicious plugin IDs or signatures
+        blacklistedPlugins.add("malicious.plugin.example");
+        blacklistedPlugins.add("banned.plugin.id");
+    }
+    
+    /**
+     * Validate a plugin for security compliance
+     */
+    public boolean validatePlugin(PluginInfo pluginInfo) {
+        try {
+            LogUtils.logInfo(TAG, "Validating plugin security: " + pluginInfo.name);
+            
+            // Check blacklist
+            if (isBlacklisted(pluginInfo)) {
+                LogUtils.logError(TAG, "Plugin is blacklisted: " + pluginInfo.id);
+                return false;
+            }
+            
+            // Validate file integrity
+            if (!validateFileIntegrity(pluginInfo.pluginFile)) {
+                LogUtils.logError(TAG, "Plugin file integrity check failed: " + pluginInfo.name);
+                return false;
+            }
+            
+            // Check permissions
+            if (!validatePermissions(pluginInfo)) {
+                LogUtils.logError(TAG, "Plugin permission validation failed: " + pluginInfo.name);
+                return false;
+            }
+            
+            // Scan for potential threats
+            if (!scanForThreats(pluginInfo.pluginFile)) {
+                LogUtils.logError(TAG, "Plugin threat scan failed: " + pluginInfo.name);
+                return false;
+            }
+            
+            // Validate signature if present
+            if (pluginInfo.manifestFile != null && !validateSignature(pluginInfo)) {
+                LogUtils.logWarning(TAG, "Plugin signature validation failed, but allowing: " + pluginInfo.name);
+                // Don't fail validation for unsigned plugins in debug mode
+            }
+            
+            // Check API compatibility
+            if (!validateApiCompatibility(pluginInfo)) {
+                LogUtils.logError(TAG, "Plugin API compatibility check failed: " + pluginInfo.name);
+                return false;
+            }
+            
+            LogUtils.logInfo(TAG, "Plugin security validation passed: " + pluginInfo.name);
+            return true;
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Plugin security validation error: " + pluginInfo.name, e);
+            return false;
+        }
+    }
+    
+    private boolean isBlacklisted(PluginInfo pluginInfo) {
+        return blacklistedPlugins.contains(pluginInfo.id);
+    }
+    
+    private boolean validateFileIntegrity(File pluginFile) {
+        try {
+            // Check if file exists and is readable
+            if (!pluginFile.exists() || !pluginFile.canRead()) {
+                return false;
+            }
+            
+            // Check file size (prevent extremely large files)
+            long maxSize = 50 * 1024 * 1024; // 50MB limit
+            if (pluginFile.length() > maxSize) {
+                LogUtils.logError(TAG, "Plugin file too large: " + pluginFile.length() + " bytes");
+                return false;
+            }
+            
+            // Basic file format validation
+            String fileName = pluginFile.getName().toLowerCase();
+            if (!fileName.endsWith(".dex") && !fileName.endsWith(".apk") && !fileName.endsWith(".jar")) {
+                return false;
+            }
+            
+            // Calculate file hash for integrity
+            String fileHash = calculateFileHash(pluginFile);
+            if (fileHash == null) {
+                return false;
+            }
+            
+            LogUtils.logDebug(TAG, "Plugin file hash: " + fileHash);
+            return true;
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "File integrity validation error", e);
+            return false;
+        }
+    }
+    
+    private String calculateFileHash(File file) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            FileInputStream fis = new FileInputStream(file);
+            
+            byte[] byteArray = new byte[1024];
+            int bytesCount;
+            
+            while ((bytesCount = fis.read(byteArray)) != -1) {
+                digest.update(byteArray, 0, bytesCount);
+            }
+            
+            fis.close();
+            
+            byte[] bytes = digest.digest();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : bytes) {
+                sb.append(String.format("%02x", b));
+            }
+            
+            return sb.toString();
+            
+        } catch (NoSuchAlgorithmException | IOException e) {
+            LogUtils.logError(TAG, "Hash calculation failed", e);
+            return null;
+        }
+    }
+    
+    private boolean validatePermissions(PluginInfo pluginInfo) {
+        if (pluginInfo.permissions == null || pluginInfo.permissions.isEmpty()) {
+            return true; // No permissions required
+        }
+        
+        for (String permission : pluginInfo.permissions) {
+            // Check if permission is dangerous
+            if (dangerousPermissions.contains(permission)) {
+                LogUtils.logWarning(TAG, "Plugin requests dangerous permission: " + permission);
+                
+                // In a production app, you might want to prompt user or require special approval
+                if (!pluginInfo.trusted) {
+                    LogUtils.logWarning(TAG, "Untrusted plugin requesting dangerous permission");
+                }
+            }
+            
+            // Check if our app has this permission
+            if (permission.startsWith("android.permission.")) {
+                int result = context.checkSelfPermission(permission);
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    LogUtils.logError(TAG, "Host app doesn't have required permission: " + permission);
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    private boolean scanForThreats(File pluginFile) {
+        try {
+            // Basic threat scanning - look for suspicious patterns
+            String fileName = pluginFile.getName().toLowerCase();
+            
+            // Check for suspicious file names
+            String[] suspiciousNames = {"malware", "virus", "trojan", "backdoor", "exploit"};
+            for (String suspicious : suspiciousNames) {
+                if (fileName.contains(suspicious)) {
+                    LogUtils.logError(TAG, "Suspicious filename detected: " + fileName);
+                    return false;
+                }
+            }
+            
+            // If it's a ZIP-based format (APK, JAR), scan contents
+            if (fileName.endsWith(".apk") || fileName.endsWith(".jar")) {
+                return scanZipContents(pluginFile);
+            }
+            
+            return true;
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Threat scanning error", e);
+            return false;
+        }
+    }
+    
+    private boolean scanZipContents(File zipFile) {
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+            ZipEntry entry;
+            
+            while ((entry = zis.getNextEntry()) != null) {
+                String entryName = entry.getName().toLowerCase();
+                
+                // Check for suspicious entry names
+                if (entryName.contains("../") || entryName.contains("..\\")) {
+                    LogUtils.logError(TAG, "Suspicious zip entry: " + entryName);
+                    return false;
+                }
+                
+                // Check for executable files in unexpected locations
+                if (entryName.endsWith(".so") && !entryName.startsWith("lib/")) {
+                    LogUtils.logWarning(TAG, "Native library in unexpected location: " + entryName);
+                }
+                
+                // Limit entry size to prevent zip bombs
+                if (entry.getSize() > 100 * 1024 * 1024) { // 100MB per entry
+                    LogUtils.logError(TAG, "Zip entry too large: " + entryName);
+                    return false;
+                }
+                
+                zis.closeEntry();
+            }
+            
+            return true;
+            
+        } catch (IOException e) {
+            LogUtils.logError(TAG, "Zip scanning error", e);
+            return false;
+        }
+    }
+    
+    private boolean validateSignature(PluginInfo pluginInfo) {
+        // In a real implementation, this would verify digital signatures
+        // For now, just return true for development
+        return true;
+    }
+    
+    private boolean validateApiCompatibility(PluginInfo pluginInfo) {
+        // Check minimum Android version
+        if (Build.VERSION.SDK_INT < 21) { // Minimum API level 21
+            LogUtils.logError(TAG, "Android version too old for plugins");
+            return false;
+        }
+        
+        // Check API version compatibility
+        if (pluginInfo.apiVersion > com.axiomloader.BuildConfig.PLUGIN_API_VERSION) {
+            LogUtils.logError(TAG, String.format("Plugin requires newer API version: %d > %d",
+                    pluginInfo.apiVersion, com.axiomloader.BuildConfig.PLUGIN_API_VERSION));
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Check if a plugin can access a specific resource
+     */
+    public boolean canAccessResource(String pluginId, String resource) {
+        // Implement resource access control
+        return true; // Simplified for now
+    }
+    
+    /**
+     * Check if a plugin can perform a specific action
+     */
+    public boolean canPerformAction(String pluginId, String action) {
+        // Implement action-based security
+        return true; // Simplified for now
+    }
+    
+    /**
+     * Get security risk level for a plugin
+     */
+    public SecurityRiskLevel getRiskLevel(PluginInfo pluginInfo) {
+        int riskScore = 0;
+        
+        // Check permissions
+        if (pluginInfo.permissions != null) {
+            for (String permission : pluginInfo.permissions) {
+                if (dangerousPermissions.contains(permission)) {
+                    riskScore += 10;
+                }
+            }
+        }
+        
+        // Check if trusted
+        if (!pluginInfo.trusted) {
+            riskScore += 5;
+        }
+        
+        // Check file size (larger files might be more complex/risky)
+        if (pluginInfo.size > 10 * 1024 * 1024) { // > 10MB
+            riskScore += 2;
+        }
+        
+        // Determine risk level
+        if (riskScore >= 20) return SecurityRiskLevel.HIGH;
+        if (riskScore >= 10) return SecurityRiskLevel.MEDIUM;
+        if (riskScore >= 5) return SecurityRiskLevel.LOW;
+        return SecurityRiskLevel.MINIMAL;
+    }
+    
+    /**
+     * Security risk levels
+     */
+    public enum SecurityRiskLevel {
+        MINIMAL,
+        LOW,
+        MEDIUM,
+        HIGH
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginSettingsActivity.java
+package com.axiomloader.modding;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.MenuItem;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import com.axiomloader.R;
+import com.axiomloader.databinding.ActivityPluginSettingsBinding;
+import com.axiomloader.utils.LogUtils;
+
+public class PluginSettingsActivity extends AppCompatActivity {
+    
+    private ActivityPluginSettingsBinding binding;
+    private PluginManager pluginManager;
+    private String pluginId;
+    private SharedPreferences preferences;
+    private static final String TAG = "PluginSettingsActivity";
+    private static final String PREFS_NAME = "axiom_plugin_settings";
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        binding = ActivityPluginSettingsBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle(R.string.plugin_settings);
+        }
+        
+        pluginManager = PluginManager.getInstance();
+        preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        
+        pluginId = getIntent().getStringExtra("plugin_id");
+        
+        setupSettings();
+        loadCurrentSettings();
+        
+        LogUtils.logInfo(TAG, "PluginSettingsActivity created" + (pluginId != null ? " for plugin: " + pluginId : ""));
+    }
+    
+    private void setupSettings() {
+        binding.switchPluginSystemEnabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (buttonView.isPressed()) {
+                togglePluginSystem(isChecked);
+            }
+        });
+        
+        binding.switchDeveloperMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (buttonView.isPressed()) {
+                toggleDeveloperMode(isChecked);
+            }
+        });
+        
+        binding.switchHotReload.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (buttonView.isPressed()) {
+                toggleHotReload(isChecked);
+            }
+        });
+        
+        binding.switchSecurityChecks.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (buttonView.isPressed()) {
+                toggleSecurityChecks(isChecked);
+            }
+        });
+        
+        binding.switchAutoCleanup.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (buttonView.isPressed()) {
+                toggleAutoCleanup(isChecked);
+            }
+        });
+    }
+    
+    private void loadCurrentSettings() {
+        binding.switchPluginSystemEnabled.setChecked(pluginManager.isPluginSystemEnabled());
+        
+        binding.switchDeveloperMode.setChecked(preferences.getBoolean("developer_mode", com.axiomloader.BuildConfig.DEBUG));
+        binding.switchHotReload.setChecked(preferences.getBoolean("hot_reload", com.axiomloader.BuildConfig.DEBUG));
+        binding.switchSecurityChecks.setChecked(preferences.getBoolean("security_checks", true));
+        binding.switchAutoCleanup.setChecked(preferences.getBoolean("auto_cleanup", true));
+        
+        updateDeveloperFeatures(preferences.getBoolean("developer_mode", false));
+        updateStatistics();
+    }
+    
+    private void togglePluginSystem(boolean enabled) {
+        new Thread(() -> {
+            try {
+                if (enabled) {
+                    pluginManager.enablePluginSystem();
+                } else {
+                    pluginManager.disablePluginSystem();
+                }
+                
+                runOnUiThread(() -> {
+                    String message = enabled ? "Plugin system enabled" : "Plugin system disabled";
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                    updateStatistics();
+                });
+                
+                LogUtils.logInfo(TAG, "Plugin system toggled: " + enabled);
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Failed to toggle plugin system", e);
+                runOnUiThread(() -> {
+                    binding.switchPluginSystemEnabled.setChecked(!enabled);
+                    Toast.makeText(this, "Failed to toggle plugin system", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+    
+    private void toggleDeveloperMode(boolean enabled) {
+        preferences.edit().putBoolean("developer_mode", enabled).apply();
+        Toast.makeText(this, "Developer mode " + (enabled ? "enabled" : "disabled"), Toast.LENGTH_SHORT).show();
+        LogUtils.logInfo(TAG, "Developer mode toggled: " + enabled);
+        updateDeveloperFeatures(enabled);
+    }
+    
+    private void toggleHotReload(boolean enabled) {
+        preferences.edit().putBoolean("hot_reload", enabled).apply();
+        Toast.makeText(this, "Hot reload " + (enabled ? "enabled" : "disabled"), Toast.LENGTH_SHORT).show();
+        LogUtils.logInfo(TAG, "Hot reload toggled: " + enabled);
+    }
+    
+    private void toggleSecurityChecks(boolean enabled) {
+        preferences.edit().putBoolean("security_checks", enabled).apply();
+        Toast.makeText(this, "Security checks " + (enabled ? "enabled" : "disabled"), Toast.LENGTH_SHORT).show();
+        LogUtils.logInfo(TAG, "Security checks toggled: " + enabled);
+        
+        if (!enabled) {
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Warning")
+                .setMessage("Disabling security checks may expose your device to malicious plugins. Only disable this if you understand the risks.")
+                .setPositiveButton("I Understand", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+        }
+    }
+    
+    private void toggleAutoCleanup(boolean enabled) {
+        preferences.edit().putBoolean("auto_cleanup", enabled).apply();
+        Toast.makeText(this, "Auto cleanup " + (enabled ? "enabled" : "disabled"), Toast.LENGTH_SHORT).show();
+        LogUtils.logInfo(TAG, "Auto cleanup toggled: " + enabled);
+    }
+    
+    private void updateDeveloperFeatures(boolean developerMode) {
+        binding.switchHotReload.setEnabled(developerMode);
+        binding.tvHotReloadDescription.setAlpha(developerMode ? 1.0f : 0.5f);
+    }
+    
+    private void updateStatistics() {
+        new Thread(() -> {
+            try {
+                int totalPlugins = pluginManager.getTotalPluginCount();
+                int enabledPlugins = pluginManager.getEnabledPluginCount();
+                int loadedPlugins = pluginManager.getLoadedPluginCount();
+                
+                runOnUiThread(() -> {
+                    binding.tvTotalPlugins.setText("Total Plugins: " + totalPlugins);
+                    binding.tvEnabledPlugins.setText("Enabled: " + enabledPlugins);
+                    binding.tvLoadedPlugins.setText("Loaded: " + loadedPlugins);
+                    
+                    binding.tvPluginDirectory.setText("Plugin Directory:\n" + 
+                        pluginManager.getPluginDirectory().getAbsolutePath());
+                });
+                
+            } catch (Exception e) {
+                LogUtils.logError(TAG, "Failed to update statistics", e);
+            }
+        }).start();
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        binding = null;
+        LogUtils.logInfo(TAG, "PluginSettingsActivity destroyed");
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginStoreActivity.java
+package com.axiomloader.modding;
+
+import android.os.Bundle;
+import android.view.MenuItem;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import com.axiomloader.R;
+import com.axiomloader.databinding.ActivityPluginStoreBinding;
+import com.axiomloader.utils.LogUtils;
+
+public class PluginStoreActivity extends AppCompatActivity {
+    
+    private ActivityPluginStoreBinding binding;
+    private static final String TAG = "PluginStoreActivity";
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        binding = ActivityPluginStoreBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle(R.string.plugin_store);
+        }
+        
+        setupUI();
+        showPlaceholderContent();
+        
+        LogUtils.logInfo(TAG, "PluginStoreActivity created");
+    }
+    
+    private void setupUI() {
+        binding.recyclerViewStore.setLayoutManager(new LinearLayoutManager(this));
+        
+        binding.btnRefreshStore.setOnClickListener(v -> refreshStore());
+    }
+    
+    private void showPlaceholderContent() {
+        // Display placeholder message for future implementation
+        binding.tvStoreMessage.setText(
+            "Plugin Store Coming Soon!\n\n" +
+            "The plugin marketplace will allow you to:\n\n" +
+            "• Browse community plugins\n" +
+            "• Download and install plugins with one click\n" +
+            "• Rate and review plugins\n" +
+            "• Check for plugin updates\n" +
+            "• Submit your own plugins\n\n" +
+            "For now, you can manually install plugins by:\n" +
+            "1. Placing .dex or .apk files in the plugin directory\n" +
+            "2. Creating a manifest.json file\n" +
+            "3. Enabling the plugin in Plugin Manager"
+        );
+    }
+    
+    private void refreshStore() {
+        Toast.makeText(this, "Plugin store refresh - coming soon!", Toast.LENGTH_SHORT).show();
+        LogUtils.logInfo(TAG, "Store refresh requested");
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        binding = null;
+        LogUtils.logInfo(TAG, "PluginStoreActivity destroyed");
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/modding/PluginSystemInitializer.java
+package com.axiomloader.modding;
+
+import android.content.Context;
+import android.os.Environment;
+import com.axiomloader.BuildConfig;
+import com.axiomloader.utils.LogUtils;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Arrays;
+
+/**
+ * PluginSystemInitializer - Sets up the plugin system environment
+ * Creates directories, initializes configuration, and sets up the runtime environment
+ */
+public class PluginSystemInitializer {
+    
+    private static final String TAG = "PluginSystemInitializer";
+    private final Context context;
+    
+    public PluginSystemInitializer(Context context) {
+        this.context = context;
+    }
+    
+    /**
+     * Initialize the complete plugin system
+     */
+    public void initialize() throws Exception {
+        LogUtils.logInfo(TAG, "Initializing plugin system...");
+        
+        try {
+            // Create directory structure
+            createDirectoryStructure();
+            
+            // Setup plugin environment
+            setupPluginEnvironment();
+            
+            // Create sample plugin template
+            if (BuildConfig.DEBUG) {
+                createSamplePluginTemplate();
+            }
+            
+            // Verify system integrity
+            verifySystemIntegrity();
+            
+            LogUtils.logInfo(TAG, "Plugin system initialized successfully");
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to initialize plugin system", e);
+            throw new Exception("Plugin system initialization failed", e);
+        }
+    }
+    
+    private void createDirectoryStructure() throws IOException {
+        File baseDir = new File(context.getExternalFilesDir(null), "axiom_plugins");
+        
+        String[] directories = {
+            "installed",      // Installed plugin files
+            "temp",          // Temporary files during installation
+            "data",          // Plugin data storage
+            "cache",         // Plugin cache files  
+            "logs",          // Plugin-specific logs
+            "backups",       // Plugin backups
+            "templates",     // Plugin development templates
+            "store",         // Downloaded plugins from store
+            "development",   // Development workspace
+            "sandbox"        // Sandboxed execution environment
+        };
+        
+        for (String dir : directories) {
+            File directory = new File(baseDir, dir);
+            if (!directory.exists()) {
+                boolean created = directory.mkdirs();
+                if (!created) {
+                    throw new IOException("Failed to create directory: " + directory.getAbsolutePath());
+                }
+                LogUtils.logDebug(TAG, "Created directory: " + dir);
+            }
+        }
+        
+        // Create .nomedia file to prevent media scanning
+        File nomediaFile = new File(baseDir, ".nomedia");
+        if (!nomediaFile.exists()) {
+            boolean created = nomediaFile.createNewFile();
+            if (created) {
+                LogUtils.logDebug(TAG, "Created .nomedia file");
+            }
+        }
+    }
+    
+    private void setupPluginEnvironment() throws IOException {
+        // Create plugin configuration file
+        createPluginConfig();
+        
+        // Setup DEX optimization directories
+        setupDexOptimization();
+        
+        // Initialize plugin registry
+        initializePluginRegistry();
+        
+        // Create security policy file
+        createSecurityPolicy();
+    }
+    
+    private void createPluginConfig() throws IOException {
+        File configFile = new File(context.getExternalFilesDir(null), "axiom_plugins/plugin_config.json");
+        
+        if (!configFile.exists()) {
+            String configContent = "{\n" +
+                    "  \"version\": \"1.0\",\n" +
+                    "  \"api_version\": " + BuildConfig.PLUGIN_API_VERSION + ",\n" +
+                    "  \"max_plugins\": 50,\n" +
+                    "  \"max_plugin_size\": 52428800,\n" +
+                    "  \"security_enabled\": true,\n" +
+                    "  \"developer_mode\": " + BuildConfig.DEBUG + ",\n" +
+                    "  \"hot_reload_enabled\": " + BuildConfig.DEBUG + ",\n" +
+                    "  \"allowed_permissions\": [\n" +
+                    "    \"axiom.permission.ACCESS_LOGS\",\n" +
+                    "    \"axiom.permission.MODIFY_UI\",\n" +
+                    "    \"axiom.permission.NETWORK_ACCESS\",\n" +
+                    "    \"axiom.permission.FILE_ACCESS\"\n" +
+                    "  ],\n" +
+                    "  \"sandbox_enabled\": true,\n" +
+                    "  \"update_check_interval\": 86400000,\n" +
+                    "  \"backup_enabled\": true,\n" +
+                    "  \"plugin_timeout\": 30000,\n" +
+                    "  \"memory_limit_mb\": 256\n" +
+                    "}";
+            
+            try (FileWriter writer = new FileWriter(configFile)) {
+                writer.write(configContent);
+            }
+            
+            LogUtils.logInfo(TAG, "Created plugin configuration file");
+        }
+    }
+    
+    private void setupDexOptimization() {
+        File dexOptDir = new File(context.getCacheDir(), "plugin_dex");
+        if (!dexOptDir.exists()) {
+            boolean created = dexOptDir.mkdirs();
+            if (!created) {
+                LogUtils.logWarning(TAG, "Failed to create DEX optimization directory");
+                return;
+            }
+        }
+        
+        // Set appropriate permissions for security
+        try {
+            dexOptDir.setReadable(true, true);  // Owner read only
+            dexOptDir.setWritable(true, true);  // Owner write only
+            dexOptDir.setExecutable(true, true); // Owner execute only
+            
+            LogUtils.logDebug(TAG, "DEX optimization directory setup complete");
+        } catch (SecurityException e) {
+            LogUtils.logError(TAG, "Could not set DEX directory permissions", e);
+        }
+    }
+    
+    private void initializePluginRegistry() throws IOException {
+        File registryFile = new File(context.getExternalFilesDir(null), "axiom_plugins/plugin_registry.json");
+        
+        if (!registryFile.exists()) {
+            String registryContent = "{\n" +
+                    "  \"version\": \"1.0\",\n" +
+                    "  \"last_updated\": " + System.currentTimeMillis() + ",\n" +
+                    "  \"plugins\": [],\n" +
+                    "  \"enabled_plugins\": [],\n" +
+                    "  \"plugin_stats\": {\n" +
+                    "    \"total_installs\": 0,\n" +
+                    "    \"total_loads\": 0,\n" +
+                    "    \"successful_loads\": 0,\n" +
+                    "    \"failed_loads\": 0,\n" +
+                    "    \"last_scan\": 0\n" +
+                    "  },\n" +
+                    "  \"system_info\": {\n" +
+                    "    \"host_app_version\": \"" + BuildConfig.VERSION_NAME + "\",\n" +
+                    "    \"api_version\": " + BuildConfig.PLUGIN_API_VERSION + ",\n" +
+                    "    \"android_version\": " + android.os.Build.VERSION.SDK_INT + "\n" +
+                    "  }\n" +
+                    "}";
+            
+            try (FileWriter writer = new FileWriter(registryFile)) {
+                writer.write(registryContent);
+            }
+            
+            LogUtils.logInfo(TAG, "Created plugin registry file");
+        }
+    }
+    
+    private void createSecurityPolicy() throws IOException {
+        File policyFile = new File(context.getExternalFilesDir(null), "axiom_plugins/security_policy.json");
+        
+        if (!policyFile.exists()) {
+            String policyContent = "{\n" +
+                    "  \"version\": \"1.0\",\n" +
+                    "  \"security_level\": \"" + (BuildConfig.DEBUG ? "development" : "production") + "\",\n" +
+                    "  \"signature_required\": " + (!BuildConfig.DEBUG) + ",\n" +
+                    "  \"allowed_sources\": [\n" +
+                    "    \"local_filesystem\",\n" +
+                    "    \"official_store\"\n" +
+                    "  ],\n" +
+                    "  \"blocked_permissions\": [\n" +
+                    "    \"android.permission.INSTALL_PACKAGES\",\n" +
+                    "    \"android.permission.DELETE_PACKAGES\",\n" +
+                    "    \"android.permission.SYSTEM_ALERT_WINDOW\"\n" +
+                    "  ],\n" +
+                    "  \"sandbox_restrictions\": {\n" +
+                    "    \"network_access\": true,\n" +
+                    "    \"file_system_access\": \"restricted\",\n" +
+                    "    \"system_api_access\": false,\n" +
+                    "    \"root_access\": false\n" +
+                    "  },\n" +
+                    "  \"resource_limits\": {\n" +
+                    "    \"max_memory_mb\": 256,\n" +
+                    "    \"max_cpu_time_ms\": 30000,\n" +
+                    "    \"max_network_requests\": 100\n" +
+                    "  }\n" +
+                    "}";
+            
+            try (FileWriter writer = new FileWriter(policyFile)) {
+                writer.write(policyContent);
+            }
+            
+            LogUtils.logInfo(TAG, "Created security policy file");
+        }
+    }
+    
+    private void createSamplePluginTemplate() throws IOException {
+        File templateDir = new File(context.getExternalFilesDir(null), "axiom_plugins/templates");
+        File sampleTemplate = new File(templateDir, "sample_plugin_manifest.json");
+        
+        if (!sampleTemplate.exists()) {
+            String templateContent = "{\n" +
+                    "  \"id\": \"com.example.sample_plugin\",\n" +
+                    "  \"name\": \"Sample Plugin\",\n" +
+                    "  \"version\": \"1.0.0\",\n" +
+                    "  \"author\": \"Plugin Developer\",\n" +
+                    "  \"description\": \"A sample plugin demonstrating basic functionality\",\n" +
+                    "  \"main_class\": \"com.example.SamplePlugin\",\n" +
+                    "  \"api_version\": " + BuildConfig.PLUGIN_API_VERSION + ",\n" +
+                    "  \"min_android_version\": 21,\n" +
+                    "  \"permissions\": [\n" +
+                    "    \"axiom.permission.ACCESS_LOGS\"\n" +
+                    "  ],\n" +
+                    "  \"features\": [\n" +
+                    "    \"ui_modification\",\n" +
+                    "    \"log_analysis\"\n" + 
+                    "  ],\n" +
+                    "  \"category\": \"utility\",\n" +
+                    "  \"tags\": [\"sample\", \"demo\", \"utility\"],\n" +
+                    "  \"hooks\": {\n" +
+                    "    \"onApplicationStart\": \"onAppStart\",\n" +
+                    "    \"onLogReceived\": \"handleLog\"\n" +
+                    "  },\n" +
+                    "  \"config\": {\n" +
+                    "    \"enable_notifications\": true,\n" +
+                    "    \"log_level\": \"INFO\",\n" +
+                    "    \"auto_start\": false\n" +
+                    "  }\n" +
+                    "}";
+            
+            try (FileWriter writer = new FileWriter(sampleTemplate)) {
+                writer.write(templateContent);
+            }
+            
+            // Create Java template
+            File javaTemplate = new File(templateDir, "SamplePlugin.java");
+            String javaContent = "package com.example;\n\n" +
+                    "import android.content.Context;\n" +
+                    "import com.axiomloader.modding.PluginInterface;\n" +
+                    "import java.util.HashMap;\n" +
+                    "import java.util.Map;\n\n" +
+                    "public class SamplePlugin implements PluginInterface {\n" +
+                    "    private Context context;\n\n" +
+                    "    @Override\n" +
+                    "    public void onLoad(Context context) {\n" +
+                    "        this.context = context;\n" +
+                    "        // Plugin initialization code here\n" +
+                    "    }\n\n" +
+                    "    @Override\n" +
+                    "    public void onUnload() {\n" +
+                    "        // Plugin cleanup code here\n" +
+                    "    }\n\n" +
+                    "    @Override\n" +
+                    "    public Map<String, Object> getPluginInfo() {\n" +
+                    "        Map<String, Object> info = new HashMap<>();\n" +
+                    "        info.put(\"name\", \"Sample Plugin\");\n" +
+                    "        info.put(\"version\", \"1.0.0\");\n" +
+                    "        return info;\n" +
+                    "    }\n\n" +
+                    "    @Override\n" +
+                    "    public String getPluginName() {\n" +
+                    "        return \"Sample Plugin\";\n" +
+                    "    }\n\n" +
+                    "    @Override\n" +
+                    "    public String getPluginVersion() {\n" +
+                    "        return \"1.0.0\";\n" +
+                    "    }\n\n" +
+                    "    @Override\n" +
+                    "    public String getPluginDescription() {\n" +
+                    "        return \"A sample plugin demonstrating basic functionality\";\n" +
+                    "    }\n\n" +
+                    "    // Custom plugin methods\n" +
+                    "    public void onAppStart() {\n" +
+                    "        // Called when app starts\n" +
+                    "    }\n\n" +
+                    "    public void handleLog(String logMessage) {\n" +
+                    "        // Called when new log message arrives\n" +
+                    "    }\n" +
+                    "}";
+            
+            try (FileWriter writer = new FileWriter(javaTemplate)) {
+                writer.write(javaContent);
+            }
+            
+            LogUtils.logInfo(TAG, "Created plugin templates");
+        }
+    }
+    
+    private void verifySystemIntegrity() throws Exception {
+        File baseDir = new File(context.getExternalFilesDir(null), "axiom_plugins");
+        
+        // Check if base directory exists and is writable
+        if (!baseDir.exists() || !baseDir.canWrite()) {
+            throw new Exception("Plugin base directory is not accessible");
+        }
+        
+        // Verify required subdirectories
+        String[] requiredDirs = {"installed", "temp", "data", "cache", "logs"};
+        for (String dirName : requiredDirs) {
+            File dir = new File(baseDir, dirName);
+            if (!dir.exists() || !dir.canWrite()) {
+                throw new Exception("Required directory not accessible: " + dirName);
+            }
+        }
+        
+        // Check DEX optimization directory
+        File dexOptDir = new File(context.getCacheDir(), "plugin_dex");
+        if (!dexOptDir.exists() || !dexOptDir.canWrite()) {
+            throw new Exception("DEX optimization directory not accessible");
+        }
+        
+        // Verify configuration files exist
+        File configFile = new File(baseDir, "plugin_config.json");
+        File registryFile = new File(baseDir, "plugin_registry.json");
+        File policyFile = new File(baseDir, "security_policy.json");
+        
+        if (!configFile.exists() || !registryFile.exists() || !policyFile.exists()) {
+            throw new Exception("Required configuration files missing");
+        }
+        
+        LogUtils.logInfo(TAG, "System integrity verification passed");
+    }
+    
+    /**
+     * Clean up temporary files and optimize storage
+     */
+    public void performMaintenance() {
+        LogUtils.logInfo(TAG, "Performing plugin system maintenance...");
+        
+        try {
+            // Clean temporary files
+            cleanTemporaryFiles();
+            
+            // Optimize cache
+            optimizeCache();
+            
+            // Clean old logs
+            cleanOldLogs();
+            
+            LogUtils.logInfo(TAG, "Plugin system maintenance completed");
+            
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Maintenance failed", e);
+        }
+    }
+    
+    private void cleanTemporaryFiles() {
+        File tempDir = new File(context.getExternalFilesDir(null), "axiom_plugins/temp");
+        File[] tempFiles = tempDir.listFiles();
+        
+        if (tempFiles != null) {
+            for (File file : tempFiles) {
+                // Delete files older than 1 hour
+                if (System.currentTimeMillis() - file.lastModified() > 3600000) {
+                    boolean deleted = file.delete();
+                    if (deleted) {
+                        LogUtils.logDebug(TAG, "Deleted temp file: " + file.getName());
+                    }
+                }
+            }
+        }
+    }
+    
+    private void optimizeCache() {
+        File cacheDir = new File(context.getExternalFilesDir(null), "axiom_plugins/cache");
+        File[] cacheFiles = cacheDir.listFiles();
+        
+        if (cacheFiles != null) {
+            // Sort by last modified time
+            Arrays.sort(cacheFiles, (f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()));
+            
+            // Keep only 20 most recent cache files
+            for (int i = 0; i < cacheFiles.length - 20; i++) {
+                boolean deleted = cacheFiles[i].delete();
+                if (deleted) {
+                    LogUtils.logDebug(TAG, "Deleted old cache file: " + cacheFiles[i].getName());
+                }
+            }
+        }
+    }
+    
+    private void cleanOldLogs() {
+        File logsDir = new File(context.getExternalFilesDir(null), "axiom_plugins/logs");
+        File[] logFiles = logsDir.listFiles();
+        
+        if (logFiles != null) {
+            long weekAgo = System.currentTimeMillis() - (7 * 24 * 3600000);
+            
+            for (File logFile : logFiles) {
+                if (logFile.lastModified() < weekAgo) {
+                    boolean deleted = logFile.delete();
+                    if (deleted) {
+                        LogUtils.logDebug(TAG, "Deleted old log file: " + logFile.getName());
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Reset the entire plugin system (for debugging/testing)
+     */
+    public void resetPluginSystem() throws IOException {
+        LogUtils.logWarning(TAG, "Resetting plugin system - all data will be lost!");
+        
+        File baseDir = new File(context.getExternalFilesDir(null), "axiom_plugins");
+        if (baseDir.exists()) {
+            deleteDirectoryRecursively(baseDir);
+        }
+        
+        File dexOptDir = new File(context.getCacheDir(), "plugin_dex");
+        if (dexOptDir.exists()) {
+            deleteDirectoryRecursively(dexOptDir);
+        }
+        
+        // Re-initialize
+        try {
+            initialize();
+        } catch (Exception e) {
+            LogUtils.logError(TAG, "Failed to re-initialize plugin system after reset", e);
+            throw new IOException("Failed to re-initialize plugin system after reset", e);
+        }
+        
+        LogUtils.logInfo(TAG, "Plugin system reset completed");
+    }
+    
+    private void deleteDirectoryRecursively(File dir) {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectoryRecursively(file);
+                } else {
+                    file.delete();
+                }
+            }
+        }
+        dir.delete();
+    }
+}
+
+// FILE: Axiom/app/src/main/java/com/axiomloader/ui/LogAdapter.java
 package com.axiomloader.ui;
 
 import android.content.ClipData;
@@ -824,8 +5964,7 @@ public class LogAdapter extends RecyclerView.Adapter<LogAdapter.LogViewHolder> {
     }
 }
 
-// File: Axiom/app/src/main/java/com/axiomloader/ui/LoggingActivity.java
-
+// FILE: Axiom/app/src/main/java/com/axiomloader/ui/LoggingActivity.java
 package com.axiomloader.ui;
 
 import android.content.Intent;
@@ -1357,8 +6496,7 @@ public class LoggingActivity extends AppCompatActivity {
     }
 }
 
-// File: Axiom/app/src/main/java/com/axiomloader/utils/LogUtils.java
-
+// FILE: Axiom/app/src/main/java/com/axiomloader/utils/LogUtils.java
 package com.axiomloader.utils;
 
 import android.app.ActivityManager;
@@ -2991,8 +8129,7 @@ public class LogUtils {
 }
 
 
-// File: Axiom/app/src/main/jni/Android.mk
-
+// FILE: Axiom/app/src/main/jni/Android.mk
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -3002,15 +8139,13 @@ LOCAL_SRC_FILES := tomaslib.cpp
 
 include $(BUILD_SHARED_LIBRARY)
 
-// File: Axiom/app/src/main/jni/Application.mk
-
+// FILE: Axiom/app/src/main/jni/Application.mk
 APP_ABI := all
 APP_PLATFORM := android-21
 APP_STL := c++_shared
 APP_CPPFLAGS += -std=c++17
 
-// File: Axiom/app/src/main/jni/tomaslib.cpp
-
+// FILE: Axiom/app/src/main/jni/tomaslib.cpp
 #include <jni.h>
 #include <string>
 #include "tomaslib.h"
@@ -3040,8 +8175,7 @@ Java_com_axiomloader_MainActivity_initTomasLib(
     // Add your initialization code here
 }
 
-// File: Axiom/app/src/main/jni/tomaslib.h
-
+// FILE: Axiom/app/src/main/jni/tomaslib.h
 #ifndef TOMASLIB_H
 #define TOMASLIB_H
 
@@ -3081,8 +8215,7 @@ Java_com_axiomloader_MainActivity_initTomasLib(JNIEnv* env, jobject thiz);
 
 #endif // TOMASLIB_H
 
-// File: Axiom/app/src/main/res/drawable/ic_launcher_background.xml
-
+// FILE: Axiom/app/src/main/res/drawable/ic_launcher_background.xml
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -3255,8 +8388,7 @@ Java_com_axiomloader_MainActivity_initTomasLib(JNIEnv* env, jobject thiz);
 </vector>
 
 
-// File: Axiom/app/src/main/res/drawable-v24/ic_launcher_foreground.xml
-
+// FILE: Axiom/app/src/main/res/drawable-v24/ic_launcher_foreground.xml
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
@@ -3288,8 +8420,7 @@ Java_com_axiomloader_MainActivity_initTomasLib(JNIEnv* env, jobject thiz);
         android:strokeColor="#00000000" />
 </vector>
 
-// File: Axiom/app/src/main/res/layout/activity_logging.xml
-
+// FILE: Axiom/app/src/main/res/layout/activity_logging.xml
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout 
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -3297,6 +8428,7 @@ Java_com_axiomloader_MainActivity_initTomasLib(JNIEnv* env, jobject thiz);
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".ui.LoggingActivity">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -3791,8 +8923,7 @@ Java_com_axiomloader_MainActivity_initTomasLib(JNIEnv* env, jobject thiz);
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-// File: Axiom/app/src/main/res/layout/activity_main.xml
-
+// FILE: Axiom/app/src/main/res/layout/activity_main.xml
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout 
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -3800,6 +8931,7 @@ Java_com_axiomloader_MainActivity_initTomasLib(JNIEnv* env, jobject thiz);
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
         
     <com.google.android.material.appbar.AppBarLayout        
@@ -3833,7 +8965,7 @@ Java_com_axiomloader_MainActivity_initTomasLib(JNIEnv* env, jobject thiz);
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Advanced Logging System"
+            android:text="Advanced Logging &amp; Modding System"
             android:textSize="16sp"
             android:alpha="0.7"
             android:layout_marginBottom="48dp" />
@@ -3845,448 +8977,400 @@ Java_com_axiomloader_MainActivity_initTomasLib(JNIEnv* env, jobject thiz);
             android:text="@string/open_logs"
             android:textSize="18sp"
             android:padding="16dp"
+            android:layout_marginBottom="16dp"
             app:cornerRadius="12dp"
             style="@style/Widget.Material3.Button.UnelevatedButton" />
+            
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/modding_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/open_modding"
+            android:textSize="18sp"
+            android:padding="16dp"
+            app:cornerRadius="12dp"
+            style="@style/Widget.Material3.Button.TonalButton" />
             
     </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-// File: Axiom/app/src/main/res/layout/dialog_log_settings.xml
-
+// FILE: Axiom/app/src/main/res/layout/activity_modding.xml
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Configure Logging Settings"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/switch_file_logging"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/enable_file_logging"
-        android:layout_marginBottom="8dp" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/switch_compression"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/log_compression"
-        android:layout_marginBottom="8dp" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/switch_encryption"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/log_encryption"
-        android:layout_marginBottom="8dp" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/switch_crash_reporting"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/enable_crash_reporting"
-        android:layout_marginBottom="8dp" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/switch_performance_monitoring"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Performance Monitoring"
-        android:layout_marginBottom="8dp" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/switch_auto_cleanup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/auto_delete_old_logs"
-        android:layout_marginBottom="8dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Advanced Settings"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="8dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/max_log_files" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="10"
-            android:textStyle="bold" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/log_file_size" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="5 MB"
-            android:textStyle="bold" />
-
-    </LinearLayout>
-
-</LinearLayout>
-
-
-// File: Axiom/app/src/main/res/layout/item_log_entry.xml
-
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="8dp"
-    android:background="?attr/selectableItemBackground"
-    android:minHeight="48dp">
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".modding.ModdingActivity">
 
-    <!-- Level Indicator -->
-    <View
-        android:id="@+id/level_indicator"
-        android:layout_width="4dp"
-        android:layout_height="match_parent"
-        android:layout_marginEnd="8dp"
-        android:background="#2196F3" />
-
-    <LinearLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="wrap_content">
 
-        <!-- Main Log Line -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="@string/modding_activity_title" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <!-- Timestamp -->
-            <TextView
-                android:id="@+id/tv_timestamp"
-                android:layout_width="wrap_content"
+            <!-- Plugin System Status Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="12:34:56.789"
-                android:textSize="11sp"
-                android:textColor="?android:attr/textColorSecondary"
-                android:fontFamily="monospace"
-                android:layout_marginEnd="8dp"
-                tools:text="12:34:56.789" />
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
 
-            <!-- Log Level -->
-            <TextView
-                android:id="@+id/tv_level"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="I"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:fontFamily="monospace"
-                android:layout_marginEnd="4dp"
-                android:minWidth="16dp"
-                android:gravity="center"
-                tools:text="I" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-            <!-- Separator -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="/"
-                android:textSize="12sp"
-                android:textColor="?android:attr/textColorSecondary"
-                android:layout_marginEnd="4dp" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
 
-            <!-- Tag -->
-            <TextView
-                android:id="@+id/tv_tag"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="TAG"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:maxWidth="80dp"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:layout_marginEnd="8dp"
-                tools:text="MyTag" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/plugin_system"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
 
-            <!-- Separator -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=":"
-                android:textSize="12sp"
-                android:textColor="?android:attr/textColorSecondary"
-                android:layout_marginEnd="8dp" />
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switch_plugin_system"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
 
-            <!-- Message -->
-            <TextView
-                android:id="@+id/tv_message"
-                android:layout_width="0dp"
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_system_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/plugin_system_disabled"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="16dp"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_total_plugins"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Total: 0"
+                                android:textSize="12sp"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+
+                            <TextView
+                                android:id="@+id/tv_enabled_plugins"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Enabled: 0"
+                                android:textSize="12sp"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_loaded_plugins"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Loaded: 0"
+                                android:textSize="12sp"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_plugin_directory"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Directory: ..."
+                        android:textSize="10sp"
+                        android:layout_marginTop="8dp"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:maxLines="2"
+                        android:ellipsize="middle" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Quick Actions Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Log message here"
-                android:textSize="12sp"
-                android:textColor="?android:attr/textColorPrimary"
-                android:maxLines="3"
-                android:ellipsize="end"
-                tools:text="This is a sample log message that might be quite long and could wrap to multiple lines" />
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Quick Actions"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_refresh_plugins"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="8dp"
+                            android:text="Refresh Status"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_scan_plugins"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/scan_plugins"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Main Features Grid -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Row 1 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_plugin_manager"
+                        android:layout_width="0dp"
+                        android:layout_height="120dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="4dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="📦"
+                                android:textSize="32sp"
+                                android:layout_marginBottom="8dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/plugin_manager"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textAlignment="center" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_plugin_development"
+                        android:layout_width="0dp"
+                        android:layout_height="120dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="4dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⚡"
+                                android:textSize="32sp"
+                                android:layout_marginBottom="8dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/plugin_development"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textAlignment="center" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
+                <!-- Row 2 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_plugin_store"
+                        android:layout_width="0dp"
+                        android:layout_height="120dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="4dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🏪"
+                                android:textSize="32sp"
+                                android:layout_marginBottom="8dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/plugin_store"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textAlignment="center" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_plugin_settings"
+                        android:layout_width="0dp"
+                        android:layout_height="120dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="4dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⚙️"
+                                android:textSize="32sp"
+                                android:layout_marginBottom="8dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/plugin_settings"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center"
+                                android:textAlignment="center" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
+            </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Additional Info Line (Thread + Location) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="2dp"
-            android:gravity="center_vertical">
+    </androidx.core.widget.NestedScrollView>
 
-            <!-- Thread Info -->
-            <TextView
-                android:id="@+id/tv_thread"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="[main]"
-                android:textSize="10sp"
-                android:textColor="?android:attr/textColorSecondary"
-                android:fontFamily="monospace"
-                android:layout_marginEnd="8dp"
-                android:visibility="gone"
-                tools:text="[main]"
-                tools:visibility="visible" />
-
-            <!-- Location Info -->
-            <TextView
-                android:id="@+id/tv_location"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="(MainActivity.onCreate:42)"
-                android:textSize="10sp"
-                android:textColor="?android:attr/textColorSecondary"
-                android:fontFamily="monospace"
-                android:ellipsize="start"
-                android:singleLine="true"
-                android:visibility="gone"
-                tools:text="(MainActivity.onCreate:42)"
-                tools:visibility="visible" />
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-</LinearLayout>
-
-// File: Axiom/app/src/main/res/menu/logging_menu.xml
-
-<?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-
-    <item
-        android:id="@+id/action_refresh"
-        android:title="Refresh"
-        android:icon="@android:drawable/ic_menu_rotate"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/action_clear_search"
-        android:title="Clear Filters"
-        android:icon="@android:drawable/ic_menu_close_clear_cancel"
-        app:showAsAction="ifRoom" />
-
-</menu>
-
-// File: Axiom/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
-
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background" />
-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
-</adaptive-icon>
-
-// File: Axiom/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
-
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background" />
-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
-</adaptive-icon>
-
-// File: Axiom/app/src/main/res/values/colors.xml
-
-<?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
-
-// File: Axiom/app/src/main/res/values/strings.xml
-
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Axiom</string>
-    <string name="logging_activity_title">Advanced Logging System</string>
-    <string name="open_logs">Open Logs</string>
-    <string name="log_level_verbose">VERBOSE</string>
-    <string name="log_level_debug">DEBUG</string>
-    <string name="log_level_info">INFO</string>
-    <string name="log_level_warn">WARN</string>
-    <string name="log_level_error">ERROR</string>
-    <string name="log_level_wtf">WTF</string>
-    <string name="log_message_hint">Enter your log message here...</string>
-    <string name="log_tag_hint">Log Tag</string>
-    <string name="send_log">Send Log</string>
-    <string name="clear_logs">Clear Logs</string>
-    <string name="export_logs">Export Logs</string>
-    <string name="filter_logs">Filter Logs</string>
-    <string name="search_logs">Search Logs</string>
-    <string name="log_settings">Log Settings</string>
-    <string name="enable_file_logging">Enable File Logging</string>
-    <string name="enable_crash_reporting">Enable Crash Reporting</string>
-    <string name="max_log_files">Max Log Files</string>
-    <string name="log_file_size">Log File Size (MB)</string>
-    <string name="auto_delete_old_logs">Auto Delete Old Logs</string>
-    <string name="log_format">Log Format</string>
-    <string name="timestamp_format">Timestamp Format</string>
-    <string name="enable_colors">Enable Colors</string>
-    <string name="enable_threading">Enable Threading Info</string>
-    <string name="enable_stacktrace">Enable Stack Trace</string>
-    <string name="log_compression">Enable Log Compression</string>
-    <string name="log_encryption">Enable Log Encryption</string>
-    <string name="logs_exported_successfully">Logs exported successfully</string>
-    <string name="logs_cleared_successfully">Logs cleared successfully</string>
-    <string name="no_logs_found">No logs found</string>
-    <string name="log_file_created">Log file created: %1$s</string>
-    <string name="crash_detected">Crash detected and logged</string>
-    <string name="memory_usage">Memory Usage: %1$s MB</string>
-    <string name="cpu_usage">CPU Usage: %1$s%%</string>
-    <string name="battery_level">Battery: %1$s%%</string>
-    <string name="network_status">Network: %1$s</string>
-    <string name="storage_available">Storage: %1$s GB available</string>
-</resources>
-
-// File: Axiom/app/src/main/res/values/themes.xml
-
-<resources xmlns:tools="http://schemas.android.com/tools">
-  <!-- Base application theme. -->
-  <style name="Base.AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
-    <!-- Customize your theme here. -->
-    <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-  </style>
-
-  <style name="AppTheme" parent="Base.AppTheme" />
-</resources>
-
-// File: Axiom/app/src/main/res/values-night/colors.xml
-
-<?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
-
-// File: Axiom/app/src/main/res/values-night/themes.xml
-
-<resources xmlns:tools="http://schemas.android.com/tools">
-  <!-- Base application theme. -->
-  <style name="Base.AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
-    <!-- Customize your theme here. -->
-    <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-  </style>
-
-  <style name="AppTheme" parent="Base.AppTheme" />
-</resources>
-
-// File: Axiom/app/src/main/res/xml/backup_rules.xml
-
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older that API 31
-   See https://developer.android.com/about/versions/12/backup-restore
--->
-<full-backup-content>
-  <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
-</full-backup-content>
-
-// File: Axiom/app/src/main/res/xml/data_extraction_rules.xml
-
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
--->
-<data-extraction-rules>
-  <cloud-backup>
-    <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
-  </cloud-backup>
-  <!--
-    <device-transfer>
-        <include .../>
-        <exclude .../>
-    </device-transfer>
-    -->
-</data-extraction-rules>
-
-// File: Axiom/app/src/main/res/xml/file_paths.xml
-
-<?xml version="1.0" encoding="utf-8"?>
-<paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-files-path
-        name="axiom_logs"
-        path="axiom_logs/" />
-    <external-files-path
-        name="exports"
-        path="exports/" />
-    <files-path
-        name="internal_logs"
-        path="axiom_logs/" />
-</paths>
-
-// File: Axiom/gradle/wrapper/gradle-wrapper.properties
-
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-8.11.1-bin.zip
-networkTimeout=10000
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
 
